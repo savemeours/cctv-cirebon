@@ -8,6 +8,7 @@ const areaConfig = {
 let activeArea = 'city';
 let hls;
 let heartbeatTimer;
+let connectionTimer;
 let activeVideo;
 const catalogs = new Map();
 const sourceLabels = new Map();
@@ -87,6 +88,7 @@ function normalizeCityCamera(row) {
 }
 
 function stopPlayer() {
+  clearTimeout(connectionTimer);
   clearInterval(heartbeatTimer);
   heartbeatTimer = undefined;
   hls?.destroy();
@@ -116,9 +118,15 @@ function openCityCamera(camera) {
   player.replaceChildren(video);
   message.textContent = 'Menghubungkan tayangan Kota Cirebon…';
   const failed = () => {
+    clearTimeout(connectionTimer);
+    clearInterval(heartbeatTimer);
+    hls?.destroy();
+    hls = undefined;
     message.textContent = 'Tayangan belum dapat diputar di halaman ini. Buka portal Kota Cirebon dan pilih ' + camera.name + '.';
   };
+  connectionTimer = setTimeout(failed, 12000);
   video.addEventListener('playing', () => {
+    clearTimeout(connectionTimer);
     message.textContent = 'Tayangan Kota Cirebon';
   });
   video.addEventListener('error', failed);
