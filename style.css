@@ -1,0 +1,62 @@
+:root {
+  color-scheme: light;
+  font-family: "Instrument Sans", Inter, system-ui, sans-serif;
+  color: #172b27;
+  background: #f2f5f2;
+  --ink: #172b27;
+  --muted: #4f635b;
+  --line: #d8e1db;
+  --green: #155341;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+.wrap { width: min(1320px, calc(100% - 56px)); margin-inline: auto; }
+.topbar { background: #12392f; color: #fff; }
+.top-inner { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.025em; }
+.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: #d2f2ad; color: #12392f; }
+.external, button { border: 1px solid var(--line); padding: 9px 13px; border-radius: 8px; font: inherit; font-size: .85rem; font-weight: 700; color: var(--green); background: #fff; text-decoration: none; cursor: pointer; }
+.external { display: inline-block; }
+.topbar .external { background: transparent; color: #edf7ed; border-color: #638277; }
+button:disabled { cursor: default; opacity: .65; }
+button:not(:disabled):hover, .external:hover { background: #e4f0e7; color: #12392f; }
+a { color: var(--green); }
+:focus-visible { outline: 3px solid #9b5200; outline-offset: 3px; }
+.topbar :focus-visible { outline-color: #eafca4; }
+.intro { padding: 40px 0 27px; }
+.region { font-size: .75rem; font-weight: 800; letter-spacing: .15em; color: var(--green); }
+h1 { margin: 8px 0; font-size: clamp(2rem, 5vw, 3.55rem); line-height: 1.06; letter-spacing: -.055em; }
+.intro > p:last-child { margin: 12px 0 0; color: var(--muted); }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(275px, 31%); gap: 16px; }
+.map-panel, .directory { background: #fff; border: 1px solid var(--line); border-radius: 15px; overflow: hidden; }
+.panel-heading { min-height: 58px; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+h2 { margin: 0; font-size: 1.12rem; letter-spacing: -.02em; }
+#map { height: clamp(390px, 60dvh, 680px); background: #e3eee6; }
+#map-placeholder { margin: 0; padding: 22px; color: var(--muted); }
+.directory { display: flex; flex-direction: column; }
+.directory-head { padding: 17px; }
+label { display: block; font-size: .82rem; font-weight: 700; margin: 15px 0 6px; }
+input { width: 100%; border: 1px solid #a4b6ac; border-radius: 8px; padding: 10px; color: inherit; font: inherit; }
+#camera-status { color: var(--muted); font-size: .88rem; line-height: 1.5; margin: 12px 0 0; }
+#refresh { margin-top: 9px; }
+#camera-list { list-style: none; margin: 0; padding: 0 16px 14px; overflow: auto; max-height: calc(clamp(390px, 60dvh, 680px) - 120px); }
+.camera-row { width: 100%; text-align: left; margin-block: 3px; padding: 10px; }
+.camera-row span { display: block; overflow-wrap: anywhere; }
+.camera-row small { display: block; margin-top: 4px; color: var(--muted); }
+.camera-pin { width: 30px; height: 30px; border: 2px solid white; display: grid; place-items: center; border-radius: 50%; background: var(--green); color: white; font-size: 14px; box-shadow: 0 2px 8px #12392f70; }
+footer { color: var(--muted); font-size: .85rem; margin: 18px 0 26px; }
+dialog { width: min(760px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 17px; border: 1px solid var(--line); border-radius: 15px; color: var(--ink); }
+dialog::backdrop { background: #122520b8; }
+.dialog-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 12px; overflow-wrap: anywhere; }
+#camera-group, .player-help { font-size: .88rem; color: var(--muted); }
+#camera-group { margin: 5px 0 0; }
+#camera-player { background: #142823; border-radius: 9px; overflow: hidden; }
+iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+@media (max-width: 720px) {
+  .wrap { width: calc(100% - 28px); }
+  .intro { padding-top: 24px; }
+  .workspace { grid-template-columns: 1fr; }
+  #map { height: clamp(260px, 43dvh, 400px); }
+  #camera-list { max-height: 50dvh; }
+}

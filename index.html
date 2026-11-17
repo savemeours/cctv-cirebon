@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Peta CCTV publik Kabupaten Cirebon dengan sumber data Socakaton.">
+  <title>Pantau Cirebon · CCTV Publik</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap top-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">◉</span> Pantau Cirebon</div>
+      <a class="external" href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">Portal Socakaton <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="intro">
+      <p class="region">KABUPATEN CIREBON</p>
+      <h1>Peta CCTV Publik</h1>
+      <p>Lihat lokasi kamera dan buka tayangan publik dari Socakaton.</p>
+    </div>
+    <noscript><p>Aktifkan JavaScript untuk memuat peta dan daftar kamera.</p></noscript>
+    <div class="workspace">
+      <section class="map-panel" aria-labelledby="map-title">
+        <div class="panel-heading"><h2 id="map-title">Peta lokasi</h2><button id="reset-map" type="button" disabled>Atur ulang peta</button></div>
+        <div id="map" aria-label="Peta lokasi CCTV"><p id="map-placeholder">Memuat peta Kabupaten Cirebon…</p></div>
+      </section>
+      <section class="directory" aria-labelledby="directory-title">
+        <div class="directory-head">
+          <h2 id="directory-title">Daftar kamera</h2>
+          <label for="camera-search">Cari nama atau grup</label>
+          <input id="camera-search" type="search" placeholder="Nama lokasi atau grup" autocomplete="off" disabled>
+          <p id="camera-status" role="status">Memuat daftar dari Socakaton…</p>
+          <button id="refresh" type="button" hidden>Muat ulang daftar</button>
+        </div>
+        <ul id="camera-list" aria-label="Kamera CCTV"></ul>
+      </section>
+    </div>
+    <footer>Sumber data <a href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">Socakaton · Diskominfo Kabupaten Cirebon</a>. Situs independen.</footer>
+  </main>
+  <dialog id="camera-dialog" aria-labelledby="camera-title">
+    <div class="dialog-head">
+      <div><h2 id="camera-title"></h2><p id="camera-group"></p></div>
+      <form method="dialog"><button type="submit" autofocus>Tutup</button></form>
+    </div>
+    <div id="camera-player"></div>
+    <p class="player-help">Jika tayangan tidak tampil, buka tayangan di tab baru atau kunjungi <a href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">portal Socakaton</a>.</p>
+    <a id="camera-link" class="external" target="_blank" rel="noopener noreferrer">Buka tayangan ↗</a>
+  </dialog>
+</body>
+</html>
