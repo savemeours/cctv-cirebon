@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
   <link rel="stylesheet" href="./style.css">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=3"></script>
 </head>
 <body>
   <header class="topbar">
@@ -52,5 +52,339 @@
     <p class="player-help">Jika tayangan tidak tampil, buka tayangan di tab baru atau kunjungi <a href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">portal Socakaton</a>.</p>
     <a id="camera-link" class="external" target="_blank" rel="noopener noreferrer">Buka tayangan ↗</a>
   </dialog>
+  <script type="application/json" id="camera-catalog">
+{
+  "data": [
+    {
+      "nama": "[D1] KEC.BEBER-JALAN GRONGGONG",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7811879494798",
+      "lng": "108.52282055092",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/23f73b3b-8d2a-47af-ae63-88e52e50ae75.html",
+      "locked": false
+    },
+    {
+      "nama": "[D3] KEC.SUMBER-SIMP BABAKAN SUMBER",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.766078",
+      "lng": "108.48537",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/d53579b1-67a7-4577-931e-dd491f332d4b.html",
+      "locked": false
+    },
+    {
+      "nama": "[D4] KEC.SUMBER-ALUN-ALUN PATARAKSA",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.763586",
+      "lng": "108.479522",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/4c99a769-bce9-47f4-86ea-683aab391d25.html",
+      "locked": false
+    },
+    {
+      "nama": "[D5] KEC.SUMBER-SIMPANG DPRD",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7636585883829",
+      "lng": "108.47975851318",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/f8083a29-d000-449a-9cb9-5491afa300f9.html",
+      "locked": false
+    },
+    {
+      "nama": "[D6] KEC.SUMBER-JALAN KANTOR BUPATI",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.764432",
+      "lng": "108.479087",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/880e7686-641a-4517-ad40-e7c6729e6cc8.html",
+      "locked": false
+    },
+    {
+      "nama": "[D7] KEC.SUMBER-SIMPANG DISDIK",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.762702",
+      "lng": "108.47796",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/157dd0a9-f3e6-4ea6-afad-f56b645e49ec.html",
+      "locked": false
+    },
+    {
+      "nama": "[D8] KEC.SUMBER-SIMPANG KENANGA",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7568338803447",
+      "lng": "108.45738364245",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/f7b1c4fe-8bee-4624-8e91-7765d5640ee8.html",
+      "locked": false
+    },
+    {
+      "nama": "[D9] KEC.PABUARAN-SIMP PASAR PABUARAN",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.904415",
+      "lng": "108.720951",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/26d5ad8b-8f22-4002-b31f-387e1cd2cbee.html",
+      "locked": false
+    },
+    {
+      "nama": "[D10] KEC.PALIMANAN-SIMPANG PALIMANAN",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.708075",
+      "lng": "108.433178",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/5404c5c8-d092-462d-a643-cc409029047a.html",
+      "locked": false
+    },
+    {
+      "nama": "[D11] KEC.SUMBER-SIMPANG PASAR SUMBER1",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.758906",
+      "lng": "108.487653",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/9e5cb528-a433-468d-9570-be0ec1316120.html",
+      "locked": false
+    },
+    {
+      "nama": "[D12] KEC.PALIMANAN-SIMPANG PALIMANAN",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.708132",
+      "lng": "108.433229",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/effcb57d-88fd-4b84-890b-729f600e28c7.html",
+      "locked": false
+    },
+    {
+      "nama": "[D13] KEC.SUMBER-SIMPANG PASAR SUMBER2",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7586665538909",
+      "lng": "108.48789608297",
+      "urlCctv": "https://socakaton.cirebonkab.go.id/stream/player?url=https%3A%2F%2Fcctv-backend.cirebonkab.go.id%3A6969%2Fc53b600d-dd23-4471-be58-51d146b40a2e.html",
+      "locked": false
+    },
+    {
+      "nama": "[D14] KEC.WERU-SIMPANG PLERED 1",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7054135985394",
+      "lng": "108.50783606809",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/2ecc2c51-a97d-456c-82b3-584b7b786873.html",
+      "locked": false
+    },
+    {
+      "nama": "[D15] KEC.PALIMANAN-SIMPANG PALIMANAN",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.708047",
+      "lng": "108.433094",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/dd29bcf6-7848-4332-85ac-8ddf65222d6b.html",
+      "locked": false
+    },
+    {
+      "nama": "[D16] KEC.GEBANG-SIMPANG PASAR GEBANG",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.818098",
+      "lng": "108.728233",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/1f5811df-8482-4a55-b00e-f4010c78bbee.html",
+      "locked": false
+    },
+    {
+      "nama": "[D17] KEC.CIWARINGIN-SIMP CIWARINGIN",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.694931",
+      "lng": "108.378547",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/7dbb977f-10ba-44be-8f19-2a9fb8979f66.html",
+      "locked": false
+    },
+    {
+      "nama": "[D18] KEC.KEDAWUNG-BUNDARAN KEDAWUNG 1",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7095921771031",
+      "lng": "108.53265354925",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/15ce2502-ec36-49d0-9eef-8243f90f582d.html",
+      "locked": false
+    },
+    {
+      "nama": "[D19] KEC.LEMAHABANG",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.831213",
+      "lng": "108.620782",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/55cfddc7-66d0-4731-a5f2-359594fee9ca.html",
+      "locked": false
+    },
+    {
+      "nama": "[D20] KEC.GUNUNG JATI-JL MAKAM SUNAN",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.662061",
+      "lng": "108.538553",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/3aa30f9f-06c8-41c7-9571-04fc18c7fc7a.html",
+      "locked": false
+    },
+    {
+      "nama": "[D21] SIMPANG PASAR JUNGJANG 1",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.652376",
+      "lng": "108.411289",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/cf248ee9-19ca-4ce7-bb31-af91322e647b.html",
+      "locked": false
+    },
+    {
+      "nama": "[D22] SIMPANG PASAR JUNGJANG 2",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.65252",
+      "lng": "108.411357",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/6cb72e32-4f64-4550-8557-a83b9c8e891a.html",
+      "locked": false
+    },
+    {
+      "nama": "[D23] KEC.KEDAWUNG-BUNDARAN KEDAWUNG 2",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7095371583598",
+      "lng": "108.53217478208",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/a71f2a04-c4c0-4280-9d71-d572d01fe1e6.html",
+      "locked": false
+    },
+    {
+      "nama": "[D26] KEC.WERU-SIMPANG PLERED 2",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7054309891699",
+      "lng": "108.50791828696",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/107ac669-3457-4d2b-80c6-9ab7639f47cd.html",
+      "locked": false
+    },
+    {
+      "nama": "[D27] KEC.SUMBER-JALAN KANTOR DPRD",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.764429",
+      "lng": "108.479128",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/02201aa3-ae20-41d8-9a8e-bf2f13cad662.html",
+      "locked": false
+    },
+    {
+      "nama": "[D28] KEC.WERU-SIMPANG PLERED 3",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.705404223327",
+      "lng": "108.50756199634",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/bcf098d1-1af4-459e-8d4a-8b94a8aed0e4.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D1] KEC.TALUN-EXIT TOL CIPERNA 2",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.760534",
+      "lng": "108.532241",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/ca5778b0-1057-40fa-9eae-f55e83944046.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D2] KEC.TALUN-EXIT TOL CIPERNA 1",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.766693",
+      "lng": "108.525235",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/f9beb377-9c08-4af5-8add-f788d3d8bd6e.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D3] KEC.PLUMBON-EXIT TOL 2",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.700625",
+      "lng": "108.486076",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/41e2b9e2-166c-41da-a2a1-c769421a2d3b.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D4] KEC.PLUMBON-EXIT TOL 1",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.700545",
+      "lng": "108.484831",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/88f8003a-9c18-4f0a-b4fa-f5b2c4f62143.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D5] SIMPANG TERMINAL LOSARI 1",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.843455",
+      "lng": "108.80856",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/a87b98b8-be04-4415-a0ad-8d5d582c17e4.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D6] SIMPANG TERMINAL LOSARI 2",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.8436423966631",
+      "lng": "108.80951532438",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/a33ab3f4-2d64-42f4-8f8b-733ba260fcc4.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D7] KEC.ASTANAJAPURA-EXIT TOL 1",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.785927",
+      "lng": "108.632219",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/9b4e3bec-18b3-4604-bfb3-62f0cff4750d.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D8] KEC.ASTANAJAPURA-EXIT TOL 2",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.7863434327074",
+      "lng": "108.6323690158",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/30338f79-90e2-4684-ac21-f338c264ad86.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D9] KEC.TALUN-SIMPANG CEMPAKA 1",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.75548",
+      "lng": "108.510394",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/addee2ff-3ca4-4f4e-91e0-0b3ea9468393.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D11] SIMPANG PASAR KRAMAT 1",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.771001",
+      "lng": "108.414772",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/355c15b8-7e6d-4d35-8c43-bded61d6290d.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D12] SIMPANG PASAR KRAMAT 2",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.771178",
+      "lng": "108.414691",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/40ea0ae3-26cf-4fa5-8802-48198d143f14.html",
+      "locked": false
+    },
+    {
+      "nama": "8001 - [D13] KEC.TALUN-SIMPANG CEMPAKA 2",
+      "group": "CCTV 2 (HIK 8001)",
+      "lat": "-6.755347",
+      "lng": "108.510536",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/d28bfca9-6986-40e5-ae83-cbaf2ab54ad3.html",
+      "locked": false
+    },
+    {
+      "nama": "[D24] KEC.SUMBER-PLANGON",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.773559011557",
+      "lng": "108.48362356919",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/e1049001-3ac2-4b37-8283-4d71a4961fde.html",
+      "locked": false
+    },
+    {
+      "nama": "[D30] KEC.TALUN-SIMPANG CIPERNA",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7738657411608",
+      "lng": "108.52027450817",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/457a0750-3eae-46e0-bc79-a9aba69cf4b1.html",
+      "locked": false
+    },
+    {
+      "nama": "[D29] KEC.SUMBER-TUGU SELAMAT DATANG",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7574353391553",
+      "lng": "108.46847052701",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/99563042-14e7-4f5b-a3c6-de3c1ea5d5ea.html",
+      "locked": false
+    },
+    {
+      "nama": "[D2] KEC. SUMBER-SIMPANG TAMAN PKK",
+      "group": "CCTV 3 (HIK 8003)",
+      "lat": "-6.7593416452825",
+      "lng": "108.47940261456",
+      "urlCctv": "https://cctv-backend.cirebonkab.go.id:6970/0d3f6af6-b408-4739-914c-4fe42da1489a.html",
+      "locked": false
+    }
+  ]
+}
+  </script>
 </body>
 </html>

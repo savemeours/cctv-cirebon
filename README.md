@@ -10,6 +10,6 @@ Untuk menjalankan di komputer, buka folder proyek, jalankan `python3 -m http.ser
 
 ## Sumber data
 
-Situs memuat salinan daftar Socakaton di `cameras.json` terlebih dahulu, lalu meminta pembaruan melalui `https://socakaton.cirebonkab.go.id/api/get_public_cctv` dari peramban. Jika pembaruan gagal, daftar terakhir tetap dapat dicari. Salinan awal berisi 41 kamera publik per 17 November 2026, dengan nama, grup, koordinat, status akses, dan tautan pemutar publik.
+Situs memuat salinan daftar Socakaton yang disertakan dalam halaman terlebih dahulu, lalu meminta pembaruan melalui `https://socakaton.cirebonkab.go.id/api/get_public_cctv` dari peramban. Jika pembaruan gagal, daftar terakhir tetap dapat dicari. Salinan awal berisi 41 kamera publik per 17 November 2026, dengan nama, grup, koordinat, status akses, dan tautan pemutar publik.
 
-Untuk mengganti salinan, perbarui `cameras.json` dan tanggal di label sumber pada `app.js`. Peta dasar menggunakan OpenStreetMap melalui Leaflet. Pemutar tetap terhubung ke penyedia resmi dan mengikuti kebijakan penyematan serta ketersediaan jaringan masing-masing kamera.
+Untuk mengganti salinan, perbarui `cameras.json`, salin isinya ke blok `camera-catalog` pada `index.html`, dan sesuaikan tanggal sumber pada `app.js`. Peta dasar menggunakan OpenStreetMap melalui Leaflet. Pemutar tetap terhubung ke penyedia resmi dan mengikuti kebijakan penyematan serta ketersediaan jaringan masing-masing kamera.

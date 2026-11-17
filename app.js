@@ -109,13 +109,19 @@ function renderCameras() {
   }
 }
 
-async function fetchCameras(url, options) {
-  const response = await fetch(url, options);
-  if (!response.ok) throw new Error('HTTP ' + response.status);
-  const result = await response.json();
+function parseCameras(result) {
   if (!Array.isArray(result?.data)) throw new Error('Format data tidak sesuai');
   return result.data.map(normalizeCamera).filter(Boolean)
     .sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
+}
+
+async function fetchCameras() {
+  const response = await fetch(source + 'api/get_public_cctv', {
+    credentials: 'omit',
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return parseCameras(await response.json());
 }
 
 function showCameras(entries, sourceLabel) {
@@ -131,7 +137,7 @@ async function loadCameras() {
   try {
     if (!currentSource) {
       try {
-        const snapshot = await fetchCameras('./cameras.json', { cache: 'reload' });
+        const snapshot = parseCameras(JSON.parse(document.querySelector('#camera-catalog').textContent));
         showCameras(snapshot, 'Salinan data Socakaton · 17 November 2026');
       } catch (error) {
         console.warn('Salinan daftar kamera gagal dimuat.', error);
@@ -139,10 +145,7 @@ async function loadCameras() {
       }
     }
     if (currentSource) cameraSource.textContent = currentSource + '. Memeriksa pembaruan…';
-    const live = await fetchCameras(source + 'api/get_public_cctv', {
-      credentials: 'omit',
-      signal: AbortSignal.timeout(8000)
-    });
+    const live = await fetchCameras();
     showCameras(live, 'Daftar terbaru dari API Socakaton');
   } catch {
     if (currentSource) {
