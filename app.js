@@ -1,5 +1,16 @@
 const source = 'https://socakaton.cirebonkab.go.id/';
 const viewerHosts = new Set(['socakaton.cirebonkab.go.id', 'cctv-backend.cirebonkab.go.id']);
+const citySource = 'https://cctv.cirebonkota.go.id/';
+const areaConfig = {
+  city: { label: 'Kota Cirebon', portal: citySource, center: [-6.727, 108.552], zoom: 13 },
+  regency: { label: 'Kabupaten Cirebon', portal: source, center: [-6.717, 108.5], zoom: 11 }
+};
+let activeArea = 'city';
+let hls;
+let heartbeatTimer;
+let activeVideo;
+const catalogs = new Map();
+const sourceLabels = new Map();
 const center = [-6.717, 108.5];
 const mapView = document.querySelector('#map');
 const mapPlaceholder = document.querySelector('#map-placeholder');
@@ -20,14 +31,14 @@ let currentSource = '';
 
 if (window.L) {
   mapPlaceholder.remove();
-  map = L.map(mapView, { scrollWheelZoom: false }).setView(center, 11);
+  map = L.map(mapView, { scrollWheelZoom: false }).setView(areaConfig[activeArea].center, areaConfig[activeArea].zoom);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
   markers = L.layerGroup().addTo(map);
   resetMap.disabled = false;
-  resetMap.addEventListener('click', () => map.setView(center, 11));
+  resetMap.addEventListener('click', () => map.setView(areaConfig[activeArea].center, areaConfig[activeArea].zoom));
 } else {
   mapPlaceholder.textContent = 'Peta dasar tidak dapat dimuat. Anda masih dapat menggunakan daftar kamera.';
 }
@@ -59,22 +70,108 @@ function normalizeCamera(row) {
   };
 }
 
+function normalizeCityCamera(row) {
+  if (!row || typeof row.name !== 'string' || !row.name.trim() ||
+      typeof row.slug !== 'string' || !/^[a-z0-9-]+$/.test(row.slug)) return null;
+  const lat = row.lat === null || row.lat === undefined ? NaN : Number(row.lat);
+  const lon = row.lon === null || row.lon === undefined ? NaN : Number(row.lon);
+  return {
+    name: row.name.trim(),
+    group: 'Kota Cirebon · ' + (row.kecamatan || 'Kamera publik'),
+    coordinates: Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lon) && Math.abs(lon) <= 180 ? [lat, lon] : null,
+    url: citySource,
+    slug: row.slug,
+    city: true,
+    online: row.online === true
+  };
+}
+
+function stopPlayer() {
+  clearInterval(heartbeatTimer);
+  heartbeatTimer = undefined;
+  hls?.destroy();
+  hls = undefined;
+  if (activeVideo) {
+    activeVideo.pause();
+    activeVideo.removeAttribute('src');
+    activeVideo.load();
+    activeVideo = undefined;
+  }
+  player.replaceChildren();
+}
+
+function openCityCamera(camera) {
+  const message = document.querySelector('#player-status');
+  streamLink.textContent = 'Buka portal Kota Cirebon ↗';
+  if (!camera.online) {
+    message.textContent = 'Kamera tercatat tidak aktif pada pembaruan sumber. Periksa ketersediaannya di portal Kota Cirebon.';
+    return;
+  }
+  const video = document.createElement('video');
+  video.controls = true;
+  video.playsInline = true;
+  video.muted = true;
+  video.autoplay = true;
+  activeVideo = video;
+  player.replaceChildren(video);
+  message.textContent = 'Menghubungkan tayangan Kota Cirebon…';
+  const failed = () => {
+    message.textContent = 'Tayangan belum dapat diputar di halaman ini. Buka portal Kota Cirebon dan pilih ' + camera.name + '.';
+  };
+  video.addEventListener('playing', () => {
+    message.textContent = 'Tayangan Kota Cirebon';
+  });
+  video.addEventListener('error', failed);
+  const heartbeat = () => fetch(citySource + 'api/stream/heartbeat/' + camera.slug, {
+    credentials: 'omit', signal: AbortSignal.timeout(8000)
+  }).catch(() => {});
+  heartbeat();
+  heartbeatTimer = setInterval(heartbeat, 15000);
+  const url = citySource + 'hls/' + camera.slug + '/index.m3u8';
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;
+    video.play().catch(failed);
+  } else if (window.Hls?.isSupported()) {
+    hls = new window.Hls({ lowLatencyMode: true, backBufferLength: 6 });
+    hls.on(window.Hls.Events.ERROR, (_event, data) => {
+      if (data.fatal) {
+        failed();
+        hls?.destroy();
+        hls = undefined;
+        clearInterval(heartbeatTimer);
+      }
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+  } else {
+    failed();
+    clearInterval(heartbeatTimer);
+  }
+}
+
 function openCamera(camera) {
   if (dialog.open) return;
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
   document.querySelector('#camera-title').textContent = camera.name;
   document.querySelector('#camera-group').textContent = camera.group;
   streamLink.href = camera.url;
+  streamLink.textContent = 'Buka tayangan ↗';
+  document.querySelector('#player-portal').href = areaConfig[activeArea].portal;
+  document.querySelector('#player-status').textContent = '';
+  dialog.showModal();
+  if (camera.city) {
+    openCityCamera(camera);
+    return;
+  }
   const frame = document.createElement('iframe');
   frame.title = 'Tayangan ' + camera.name;
   frame.src = camera.url;
   frame.sandbox = 'allow-scripts allow-same-origin allow-presentation';
   frame.allowFullscreen = true;
   player.replaceChildren(frame);
-  dialog.showModal();
 }
 
-dialog.addEventListener('close', () => player.replaceChildren());
+dialog.addEventListener('close', stopPlayer);
 
 function renderCameras() {
   const query = search.value.trim().toLocaleLowerCase('id');
@@ -91,6 +188,7 @@ function renderCameras() {
     name.textContent = camera.name;
     const group = document.createElement('small');
     group.textContent = camera.group || 'Kamera publik';
+    if (camera.city) group.textContent += camera.online ? ' · Aktif menurut sumber' : ' · Tidak aktif menurut sumber';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'camera-row';
@@ -115,51 +213,74 @@ function parseCameras(result) {
     .sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
 }
 
-async function fetchCameras() {
-  const response = await fetch(source + 'api/get_public_cctv', {
-    credentials: 'omit',
-    signal: AbortSignal.timeout(8000)
-  });
-  if (!response.ok) throw new Error('HTTP ' + response.status);
-  return parseCameras(await response.json());
+function parseCityCameras(result) {
+  if (!Array.isArray(result)) throw new Error('Format daftar Kota Cirebon tidak sesuai');
+  return result.map(normalizeCityCamera).filter(Boolean)
+    .sort((a, b) => a.name.localeCompare(b.name, 'id'));
 }
 
-function showCameras(entries, sourceLabel) {
-  cameras = entries;
-  currentSource = sourceLabel;
+function showArea() {
+  cameras = catalogs.get(activeArea) || [];
+  currentSource = sourceLabels.get(activeArea) || '';
   search.disabled = cameras.length === 0;
-  cameraSource.textContent = sourceLabel;
+  cameraSource.textContent = currentSource;
   renderCameras();
 }
 
 async function loadCameras() {
+  const area = activeArea;
   refresh.disabled = true;
+  if (!catalogs.has(area)) {
+    const catalogId = area === 'city' ? '#city-catalog' : '#camera-catalog';
+    const snapshot = JSON.parse(document.querySelector(catalogId).textContent);
+    catalogs.set(area, area === 'city' ? parseCityCameras(snapshot) : parseCameras(snapshot));
+    sourceLabels.set(area, area === 'city'
+      ? 'Salinan daftar Kota Cirebon · 18 November 2026'
+      : 'Salinan data Socakaton · 17 November 2026');
+    showArea();
+  }
+  cameraSource.textContent = sourceLabels.get(area) + '. Memeriksa pembaruan…';
   try {
-    if (!currentSource) {
-      try {
-        const snapshot = parseCameras(JSON.parse(document.querySelector('#camera-catalog').textContent));
-        showCameras(snapshot, 'Salinan data Socakaton · 17 November 2026');
-      } catch (error) {
-        console.warn('Salinan daftar kamera gagal dimuat.', error);
-        status.textContent = 'Memuat daftar dari Socakaton…';
-      }
-    }
-    if (currentSource) cameraSource.textContent = currentSource + '. Memeriksa pembaruan…';
-    const live = await fetchCameras();
-    showCameras(live, 'Daftar terbaru dari API Socakaton');
+    const endpoint = area === 'city' ? citySource + 'api/status' : source + 'api/get_public_cctv';
+    const response = await fetch(endpoint, {
+      credentials: 'omit',
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const result = await response.json();
+    catalogs.set(area, area === 'city' ? parseCityCameras(result) : parseCameras(result));
+    sourceLabels.set(area, 'Daftar terbaru dari ' + areaConfig[area].label);
   } catch {
-    if (currentSource) {
-      cameraSource.textContent = currentSource + '. API belum dapat diakses.';
-    } else {
-      status.textContent = 'Daftar kamera gagal dimuat. Coba muat ulang atau buka portal Socakaton.';
-      cameraSource.textContent = '';
-    }
+    sourceLabels.set(area, sourceLabels.get(area).replace(/\. Pembaruan belum tersedia\.$/, '') + '. Pembaruan belum tersedia.');
   } finally {
-    refresh.hidden = false;
-    refresh.disabled = false;
+    if (area === activeArea) {
+      showArea();
+      refresh.hidden = false;
+      refresh.disabled = false;
+    }
   }
 }
 
+function selectArea(area) {
+  if (activeArea === area) return;
+  dialog.close();
+  stopPlayer();
+  activeArea = area;
+  search.value = '';
+  for (const name of ['city', 'regency']) {
+    document.querySelector('#area-' + name).setAttribute('aria-pressed', String(name === area));
+  }
+  const portal = document.querySelector('#portal-link');
+  portal.href = areaConfig[area].portal;
+  portal.textContent = 'Portal ' + areaConfig[area].label + ' ↗';
+  map?.setView(areaConfig[area].center, areaConfig[area].zoom);
+  showArea();
+  loadCameras();
+}
+
+document.querySelector('#area-city').addEventListener('click', () => selectArea('city'));
+document.querySelector('#area-regency').addEventListener('click', () => selectArea('regency'));
 search.addEventListener('input', renderCameras);
 refresh.addEventListener('click', loadCameras);
 loadCameras();
+

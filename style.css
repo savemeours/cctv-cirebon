@@ -63,3 +63,10 @@ iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
 
 #camera-source { margin-top: 5px; }
 #camera-source:empty { display: none; }
+
+
+.area-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+.area-tabs [aria-pressed="true"] { background: var(--green); color: #fff; border-color: var(--green); }
+#camera-player video { display: block; width: 100%; aspect-ratio: 16/9; background: #142823; }
+#player-status { font-size: .88rem; line-height: 1.5; color: var(--muted); }
+#player-status:empty { display: none; }

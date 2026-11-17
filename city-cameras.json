@@ -1,0 +1,186 @@
+[
+  {
+    "slug": "depan-ataqwa",
+    "name": "Depan Masjid Raya At-Taqwa",
+    "lat": -6.710498,
+    "lon": 108.558485,
+    "kecamatan": "Pekalipan",
+    "online": true
+  },
+  {
+    "slug": "satpol-pp",
+    "name": "Satpol PP",
+    "lat": -6.73469,
+    "lon": 108.560789,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "sudarsono",
+    "name": "Jalan dr. Sudarsono",
+    "lat": -6.728697,
+    "lon": 108.552957,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "bypass",
+    "name": "Jalan Brigjen Darsono (Bypass)",
+    "lat": -6.742371,
+    "lon": 108.567851,
+    "kecamatan": "Harjamukti",
+    "online": true
+  },
+  {
+    "slug": "lemah-wungkuk",
+    "name": "Lemah Wungkuk",
+    "lat": -6.724,
+    "lon": 108.566,
+    "kecamatan": "Pekalipan",
+    "online": false
+  },
+  {
+    "slug": "simpang-pulasaren",
+    "name": "Pulasaren Rel Kereta",
+    "lat": -6.730082,
+    "lon": 108.543725,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "simpang-samsat",
+    "name": "Simpang Samsat",
+    "lat": -6.73112,
+    "lon": 108.54017,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "simpang-terminal",
+    "name": "Simpang Terminal",
+    "lat": -6.7406,
+    "lon": 108.55311,
+    "kecamatan": "Harjamukti",
+    "online": true
+  },
+  {
+    "slug": "simpang-kanggraksan",
+    "name": "Simpang Kanggraksan",
+    "lat": -6.73961,
+    "lon": 108.54811,
+    "kecamatan": "Harjamukti",
+    "online": true
+  },
+  {
+    "slug": "simpang-perumnas",
+    "name": "Simpang Perumnas",
+    "lat": -6.74198,
+    "lon": 108.56331,
+    "kecamatan": "Harjamukti",
+    "online": true
+  },
+  {
+    "slug": "simpang-gunung-sari",
+    "name": "Simpang Gunung Sari",
+    "lat": -6.712184,
+    "lon": 108.55101,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "simpang-diklatpri",
+    "name": "Simpang Diklatpri",
+    "lat": -6.728585,
+    "lon": 108.550112,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "simpang-siliwangi",
+    "name": "Simpang Siliwangi",
+    "lat": -6.710145,
+    "lon": 108.559877,
+    "kecamatan": "Kejaksan",
+    "online": true
+  },
+  {
+    "slug": "simpang-krucuk",
+    "name": "Simpang Krucuk",
+    "lat": -6.699513,
+    "lon": 108.554558,
+    "kecamatan": "Kejaksan",
+    "online": true
+  },
+  {
+    "slug": "depan-kantor-pd",
+    "name": "Depan Kantor PD",
+    "lat": -6.715,
+    "lon": 108.556,
+    "kecamatan": "Kejaksan",
+    "online": true
+  },
+  {
+    "slug": "simpang-winaon",
+    "name": "Simpang Winaon",
+    "lat": -6.719766,
+    "lon": 108.565797,
+    "kecamatan": "Pekalipan",
+    "online": true
+  },
+  {
+    "slug": "simpang-asia",
+    "name": "Simpang Asia",
+    "lat": -6.71505,
+    "lon": 108.562764,
+    "kecamatan": "Pekalipan",
+    "online": true
+  },
+  {
+    "slug": "simpang-jabang-bayi",
+    "name": "Simpang Jabang Bayi",
+    "lat": -6.736635,
+    "lon": 108.550065,
+    "kecamatan": "Kesambi",
+    "online": true
+  },
+  {
+    "slug": "pintu-masuk-balaikota",
+    "name": "Pintu Masuk Balai Kota",
+    "lat": -6.707126,
+    "lon": 108.558383,
+    "kecamatan": "Kejaksan",
+    "online": true
+  },
+  {
+    "slug": "pintu-masuk-balkot",
+    "name": "Pintu Masuk BALKOT",
+    "lat": -6.707126,
+    "lon": 108.558383,
+    "kecamatan": "Kejaksan",
+    "online": true
+  },
+  {
+    "slug": "jl-pemuda",
+    "name": "Jalan Pemuda",
+    "lat": -6.729987,
+    "lon": 108.544124,
+    "kecamatan": "Kesambi",
+    "online": false
+  },
+  {
+    "slug": "simpang-drajat",
+    "name": "Simpang Drajat",
+    "lat": -6.734127,
+    "lon": 108.562121,
+    "kecamatan": "Kesambi",
+    "online": false
+  },
+  {
+    "slug": "simpang-kesambi",
+    "name": "Kel. Kesambi",
+    "lat": -6.728363,
+    "lon": 108.558303,
+    "kecamatan": "Kesambi",
+    "online": true
+  }
+]
