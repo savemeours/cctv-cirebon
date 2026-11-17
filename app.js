@@ -36,8 +36,13 @@ function normalizeCamera(row) {
   if (!row || ![false, 0, '0', 'false'].includes(row.locked) || typeof row.nama !== 'string' || !row.nama.trim()) return null;
   if (Object.hasOwn(row, 'show_public') && ![true, 1, '1', 'true'].includes(row.show_public)) return null;
   if (typeof row.urlCctv !== 'string' || !row.urlCctv.trim()) return null;
-  const url = URL.parse(row.urlCctv, source);
-  if (!url || url.protocol !== 'https:' || !viewerHosts.has(url.hostname) || url.username || url.password) return null;
+  let url;
+  try {
+    url = new URL(row.urlCctv, source);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || !viewerHosts.has(url.hostname) || url.username || url.password) return null;
 
   const parseCoordinate = (value, limit) => {
     if ((typeof value !== 'number' && typeof value !== 'string') || !String(value).trim()) return null;
@@ -104,11 +109,8 @@ function renderCameras() {
   }
 }
 
-async function fetchCameras(url) {
-  const response = await fetch(url, {
-    credentials: 'omit',
-    signal: AbortSignal.timeout(8000)
-  });
+async function fetchCameras(url, options) {
+  const response = await fetch(url, options);
   if (!response.ok) throw new Error('HTTP ' + response.status);
   const result = await response.json();
   if (!Array.isArray(result?.data)) throw new Error('Format data tidak sesuai');
@@ -129,14 +131,18 @@ async function loadCameras() {
   try {
     if (!currentSource) {
       try {
-        const snapshot = await fetchCameras('./cameras.json');
+        const snapshot = await fetchCameras('./cameras.json', { cache: 'reload' });
         showCameras(snapshot, 'Salinan data Socakaton · 17 November 2026');
-      } catch {
+      } catch (error) {
+        console.warn('Salinan daftar kamera gagal dimuat.', error);
         status.textContent = 'Memuat daftar dari Socakaton…';
       }
     }
     if (currentSource) cameraSource.textContent = currentSource + '. Memeriksa pembaruan…';
-    const live = await fetchCameras(source + 'api/get_public_cctv');
+    const live = await fetchCameras(source + 'api/get_public_cctv', {
+      credentials: 'omit',
+      signal: AbortSignal.timeout(8000)
+    });
     showCameras(live, 'Daftar terbaru dari API Socakaton');
   } catch {
     if (currentSource) {
