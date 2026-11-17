@@ -38,7 +38,7 @@ h2 { margin: 0; font-size: 1.12rem; letter-spacing: -.02em; }
 .directory-head { padding: 17px; }
 label { display: block; font-size: .82rem; font-weight: 700; margin: 15px 0 6px; }
 input { width: 100%; border: 1px solid #a4b6ac; border-radius: 8px; padding: 10px; color: inherit; font: inherit; }
-#camera-status { color: var(--muted); font-size: .88rem; line-height: 1.5; margin: 12px 0 0; }
+#camera-status, #camera-source { color: var(--muted); font-size: .88rem; line-height: 1.5; margin: 12px 0 0; }
 #refresh { margin-top: 9px; }
 #camera-list { list-style: none; margin: 0; padding: 0 16px 14px; overflow: auto; max-height: calc(clamp(390px, 60dvh, 680px) - 120px); }
 .camera-row { width: 100%; text-align: left; margin-block: 3px; padding: 10px; }
@@ -60,3 +60,6 @@ iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
   #map { height: clamp(260px, 43dvh, 400px); }
   #camera-list { max-height: 50dvh; }
 }
+
+#camera-source { margin-top: 5px; }
+#camera-source:empty { display: none; }

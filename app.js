@@ -1,10 +1,12 @@
 const source = 'https://socakaton.cirebonkab.go.id/';
+const viewerHosts = new Set(['socakaton.cirebonkab.go.id', 'cctv-backend.cirebonkab.go.id']);
 const center = [-6.717, 108.5];
 const mapView = document.querySelector('#map');
 const mapPlaceholder = document.querySelector('#map-placeholder');
 const resetMap = document.querySelector('#reset-map');
 const search = document.querySelector('#camera-search');
 const status = document.querySelector('#camera-status');
+const cameraSource = document.querySelector('#camera-source');
 const list = document.querySelector('#camera-list');
 const refresh = document.querySelector('#refresh');
 const dialog = document.querySelector('#camera-dialog');
@@ -14,6 +16,7 @@ const streamLink = document.querySelector('#camera-link');
 let map;
 let markers;
 let cameras = [];
+let currentSource = '';
 
 if (window.L) {
   mapPlaceholder.remove();
@@ -31,9 +34,10 @@ if (window.L) {
 
 function normalizeCamera(row) {
   if (!row || ![false, 0, '0', 'false'].includes(row.locked) || typeof row.nama !== 'string' || !row.nama.trim()) return null;
+  if (Object.hasOwn(row, 'show_public') && ![true, 1, '1', 'true'].includes(row.show_public)) return null;
   if (typeof row.urlCctv !== 'string' || !row.urlCctv.trim()) return null;
   const url = URL.parse(row.urlCctv, source);
-  if (!url || url.protocol !== 'https:' || url.username || url.password) return null;
+  if (!url || url.protocol !== 'https:' || !viewerHosts.has(url.hostname) || url.username || url.password) return null;
 
   const parseCoordinate = (value, limit) => {
     if ((typeof value !== 'number' && typeof value !== 'string') || !String(value).trim()) return null;
@@ -51,6 +55,7 @@ function normalizeCamera(row) {
 }
 
 function openCamera(camera) {
+  if (dialog.open) return;
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
   document.querySelector('#camera-title').textContent = camera.name;
   document.querySelector('#camera-group').textContent = camera.group;
@@ -99,28 +104,46 @@ function renderCameras() {
   }
 }
 
+async function fetchCameras(url) {
+  const response = await fetch(url, {
+    credentials: 'omit',
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const result = await response.json();
+  if (!Array.isArray(result?.data)) throw new Error('Format data tidak sesuai');
+  return result.data.map(normalizeCamera).filter(Boolean)
+    .sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
+}
+
+function showCameras(entries, sourceLabel) {
+  cameras = entries;
+  currentSource = sourceLabel;
+  search.disabled = cameras.length === 0;
+  cameraSource.textContent = sourceLabel;
+  renderCameras();
+}
+
 async function loadCameras() {
   refresh.disabled = true;
-  search.disabled = true;
-  status.textContent = 'Memuat daftar dari Socakaton…';
   try {
-    const response = await fetch(source + 'api/get_public_cctv', {
-      credentials: 'omit',
-      signal: AbortSignal.timeout(12000)
-    });
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const result = await response.json();
-    if (!Array.isArray(result?.data)) throw new Error('Format data tidak sesuai');
-    cameras = result.data.map(normalizeCamera).filter(Boolean)
-      .sort((a, b) => a.name.localeCompare(b.name, 'id'));
-    search.disabled = cameras.length === 0;
-    renderCameras();
+    if (!currentSource) {
+      try {
+        const snapshot = await fetchCameras('./cameras.json');
+        showCameras(snapshot, 'Salinan data Socakaton · 17 November 2026');
+      } catch {
+        status.textContent = 'Memuat daftar dari Socakaton…';
+      }
+    }
+    if (currentSource) cameraSource.textContent = currentSource + '. Memeriksa pembaruan…';
+    const live = await fetchCameras(source + 'api/get_public_cctv');
+    showCameras(live, 'Daftar terbaru dari API Socakaton');
   } catch {
-    if (cameras.length === 0) {
-      status.textContent = 'Daftar kamera gagal dimuat dari Socakaton. Coba muat ulang atau buka portal Socakaton.';
+    if (currentSource) {
+      cameraSource.textContent = currentSource + '. API belum dapat diakses.';
     } else {
-      search.disabled = false;
-      status.textContent = 'Pembaruan gagal. Daftar sebelumnya masih ditampilkan.';
+      status.textContent = 'Daftar kamera gagal dimuat. Coba muat ulang atau buka portal Socakaton.';
+      cameraSource.textContent = '';
     }
   } finally {
     refresh.hidden = false;
