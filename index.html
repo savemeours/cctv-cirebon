@@ -12,10 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="./style.css?v=13">
+  <link rel="stylesheet" href="./style.css?v=14">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"></script>
-  <script type="module" src="./app.js?v=13"></script>
+  <script type="module" src="./app.js?v=14"></script>
 </head>
 <body data-view="list">
   <a class="skip-link" href="#camera-search">Cari kamera</a>
@@ -47,6 +47,14 @@
           <button type="button" data-status-filter="unavailable" aria-pressed="false"><span class="status-dot bad" aria-hidden="true"></span>Belum bisa <span id="count-unavailable">0</span></button>
         </div>
       </div>
+      <div class="library-toolbar">
+        <div class="library-tabs" role="group" aria-label="Koleksi kamera">
+          <button type="button" data-library="all" aria-pressed="true"><i class="fa-solid fa-video" aria-hidden="true"></i> Semua kamera</button>
+          <button type="button" data-library="favorites" aria-pressed="false"><i class="fa-regular fa-star" aria-hidden="true"></i> Favorit <span id="favorite-count">0</span></button>
+          <button type="button" data-library="recent" aria-pressed="false"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Terakhir ditonton</button>
+        </div>
+        <label class="sort-control"><i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i><span class="sr-only">Urutan kamera</span><select id="camera-sort"><option value="name">Nama A–Z</option><option value="status">Bisa diputar dahulu</option><option value="recent">Terakhir ditonton</option></select></label>
+      </div>
       <div class="directory-result"><p id="camera-status" role="status">Memuat kamera…</p><span class="result-note"><span class="status-dot" aria-hidden="true"></span><span id="camera-check-status">Menyiapkan pemeriksaan</span></span></div>
       <div class="camera-scroll">
         <ul id="camera-list" class="camera-list" aria-label="Kamera CCTV"></ul>
@@ -68,8 +76,12 @@
     <button type="button" data-view-choice="list" aria-pressed="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><span>Kamera</span></button>
     <button type="button" data-view-choice="map" aria-pressed="true"><i class="fa-regular fa-map" aria-hidden="true"></i><span>Peta</span></button>
   </nav>
+  <aside class="monitor-tray" id="monitor-tray" aria-label="Pilihan multi CCTV" hidden><span><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> <b id="monitor-count">0</b>/4 kamera dipilih</span><button id="clear-monitor" type="button" aria-label="Kosongkan pilihan multi CCTV"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><button id="open-monitor" type="button"><i class="fa-solid fa-play" aria-hidden="true"></i> Pantau bersamaan</button></aside>
+  <div id="app-notice" class="app-notice" role="status" hidden></div>
   <dialog id="camera-dialog" class="player-dialog" aria-labelledby="camera-title">
     <div class="player-header"><span class="player-icon" aria-hidden="true"><i class="fa-solid fa-video"></i></span><div class="player-heading"><p class="player-eyebrow">TAYANGAN CCTV</p><h2 id="camera-title"></h2><p id="camera-group"></p></div><form method="dialog"><button type="submit" class="player-close" autofocus aria-label="Tutup tayangan"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form></div>
+    <div class="player-tools"><button type="button" id="share-camera"><i class="fa-solid fa-link" aria-hidden="true"></i> Salin tautan</button><button type="button" id="fullscreen-player"><i class="fa-solid fa-expand" aria-hidden="true"></i> Layar penuh</button><button type="button" id="retry-player"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Coba lagi</button></div>
+    <input id="share-link-field" class="share-link-field" readonly aria-label="Tautan langsung kamera" hidden>
     <div id="camera-player" class="camera-player"></div>
     <div class="player-body"><p id="player-status" role="status"></p></div>
   </dialog>

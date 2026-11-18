@@ -8,6 +8,29 @@ const areaConfig = {
 };
 let activeArea = 'city';
 let statusFilter = 'all';
+let libraryFilter = 'all';
+let sortOrder = 'name';
+let selectedCamera;
+let monitorReturnTarget;
+const monitorSelection = new Map();
+const multiCleanups = [];
+let pendingLink = new URLSearchParams(location.search).get('camera');
+const linkedArea = new URLSearchParams(location.search).get('area');
+if (['city', 'regency'].includes(linkedArea)) activeArea = linkedArea;
+function readSaved(key, fallback) {
+  try { const value = JSON.parse(localStorage.getItem(key)); return Array.isArray(value) ? value : fallback; } catch { return fallback; }
+}
+const favorites = new Set(readSaved('pantau-favorites', []).filter(value => typeof value === 'string'));
+let recent = readSaved('pantau-recent', []).filter(value => value && typeof value.key === 'string' && Number.isFinite(value.time)).slice(0, 30);
+function saveLocal(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { announce('Penyimpanan browser tidak tersedia. Perubahan hanya tersimpan selama halaman terbuka.'); }
+}
+let noticeTimer;
+function announce(message) {
+  const notice = document.querySelector('#app-notice');
+  notice.textContent = message; notice.hidden = false; clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { notice.hidden = true; }, 4500);
+}
 const mobileLayout = window.matchMedia('(max-width: 800px)');
 let currentView = 'list';
 let hls;
@@ -63,7 +86,9 @@ function isCameraVisible(camera) {
   const query = search.value.trim().toLocaleLowerCase('id');
   const matchesQuery = (camera.name + ' ' + camera.group).toLocaleLowerCase('id').includes(query);
   const state = playbackChecks.get(cameraKey(camera))?.state;
-  return matchesQuery && (statusFilter === 'all' || state === statusFilter);
+  const key = cameraKey(camera);
+  const inLibrary = libraryFilter === 'all' || (libraryFilter === 'favorites' ? favorites.has(key) : recent.some(item => item.key === key));
+  return inLibrary && matchesQuery && (statusFilter === 'all' || state === statusFilter);
 }
 
 function updateVisibleCameras() {
@@ -80,6 +105,8 @@ function updateVisibleCameras() {
       if (!visible && markers.hasLayer(marker)) markers.removeLayer(marker);
     }
   }
+  sortCameraRows();
+  document.querySelector('#favorite-count').textContent = cameras.filter(camera => favorites.has(cameraKey(camera))).length;
   const message = count + ' kamera';
   if (status.textContent !== message) status.textContent = message;
   document.querySelector('#camera-empty').hidden = count !== 0;
@@ -92,7 +119,10 @@ function updateVisibleCameras() {
     ? (cameras.some(camera => !playbackChecks.has(cameraKey(camera)) || playbackChecks.get(cameraKey(camera)).state === 'checking')
       ? 'Pemeriksaan masih berjalan. Anda dapat melihat semua kamera sambil menunggu.'
       : 'Belum ada video yang berhasil diputar di browser ini. Pilih Semua untuk mencoba kamera lainnya.')
+    : libraryFilter === 'favorites' ? 'Tekan ikon bintang pada kamera untuk menyimpannya di wilayah ini.'
+    : libraryFilter === 'recent' ? 'Kamera yang Anda buka di wilayah ini akan muncul di sini.'
     : 'Coba nama lokasi lain atau tampilkan semua kamera.';
+  if (libraryFilter !== 'all' && noSearch) title.textContent = libraryFilter === 'favorites' ? 'Belum ada favorit yang sesuai' : 'Belum ada riwayat yang sesuai';
 }
 
 function setView(view) {
@@ -397,6 +427,8 @@ function normalizeCityCamera(row) {
 }
 
 function stopPlayer() {
+  for (const cleanup of multiCleanups.splice(0)) cleanup();
+  player.classList.remove('multi-player');
   clearTimeout(connectionTimer);
   clearInterval(heartbeatTimer);
   heartbeatTimer = undefined;
@@ -476,13 +508,23 @@ function openCityCamera(camera) {
 function openCamera(camera) {
   if (dialog.open) return;
   pauseChecks();
+  selectedCamera = camera;
+  document.querySelector('#share-camera').hidden = false;
+  document.querySelector('#retry-player').hidden = false;
   playerReturnKey = cameraKey(camera);
+  recent = [{ key: playerReturnKey, time: Date.now() }, ...recent.filter(item => item.key !== playerReturnKey)].slice(0, 30);
+  saveLocal('pantau-recent', recent);
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
   document.querySelector('#camera-title').textContent = displayName(camera);
   document.querySelector('#camera-group').textContent = locationName(camera) + ' · ' + areaConfig[activeArea].label;
   document.querySelector('#player-status').textContent = '';
   dialog.showModal();
   dialog.scrollTop = 0;
+  document.querySelector('#share-link-field').hidden = true;
+  mountSingleCamera(camera);
+}
+
+function mountSingleCamera(camera) {
   if (camera.city) {
     openCityCamera(camera);
     return;
@@ -501,8 +543,10 @@ function openCamera(camera) {
 
 dialog.addEventListener('close', () => {
   stopPlayer();
+  updateVisibleCameras();
   beginChecks();
-  const returnTarget = rowViews.get(playerReturnKey)?.button;
+  const returnTarget = selectedCamera ? rowViews.get(playerReturnKey)?.button : monitorReturnTarget;
+  if (document.fullscreenElement === dialog) document.exitFullscreen().catch(() => {});
   if (returnTarget?.getClientRects().length) returnTarget.focus({ preventScroll: true });
 });
 
@@ -553,7 +597,36 @@ function renderCameras() {
     button.title = camera.name;
     button.addEventListener('click', () => openCamera(camera));
     const item = document.createElement('li');
-    item.append(button);
+    const actions = document.createElement('div');
+    actions.className = 'camera-actions';
+    const favorite = document.createElement('button');
+    favorite.type = 'button'; favorite.className = 'camera-action favorite-action';
+    favorite.setAttribute('aria-label', 'Favorit ' + displayName(camera));
+    favorite.title = 'Simpan atau hapus favorit';
+    favorite.setAttribute('aria-pressed', String(favorites.has(cameraKey(camera))));
+    const star = document.createElement('i'); star.className = 'fa-regular fa-star'; star.setAttribute('aria-hidden', 'true'); favorite.append(star);
+    favorite.addEventListener('click', () => {
+      const key = cameraKey(camera);
+      if (favorites.has(key)) favorites.delete(key); else favorites.add(key);
+      favorite.setAttribute('aria-pressed', String(favorites.has(key)));
+      saveLocal('pantau-favorites', [...favorites]); updateVisibleCameras();
+      announce(favorites.has(key) ? displayName(camera) + ' disimpan ke favorit.' : displayName(camera) + ' dihapus dari favorit.');
+    });
+    const compare = document.createElement('button');
+    compare.type = 'button'; compare.className = 'camera-action monitor-action';
+    compare.setAttribute('aria-label', 'Pilih multi CCTV ' + displayName(camera));
+    compare.title = 'Pilih untuk memantau hingga 4 kamera bersamaan';
+    compare.setAttribute('aria-pressed', String(monitorSelection.has(cameraKey(camera))));
+    const gridIcon = document.createElement('i'); gridIcon.className = 'fa-solid fa-table-cells-large'; gridIcon.setAttribute('aria-hidden', 'true'); compare.append(gridIcon);
+    compare.addEventListener('click', () => {
+      const key = cameraKey(camera);
+      if (monitorSelection.has(key)) monitorSelection.delete(key);
+      else if (monitorSelection.size < 4) monitorSelection.set(key, camera);
+      else { announce('Maksimal 4 kamera. Lepaskan salah satu pilihan terlebih dahulu.'); return; }
+      compare.setAttribute('aria-pressed', String(monitorSelection.has(key))); updateMonitorTray();
+    });
+    actions.append(favorite, compare);
+    item.append(button, actions);
     list.append(item);
     rowViews.set(cameraKey(camera), { image, badge, detail, button, item });
 
@@ -589,6 +662,11 @@ function showArea() {
   updateAreaInfo();
   renderCameras();
   beginChecks();
+  if (pendingLink) {
+    const target = cameras.find(camera => shareId(camera) === pendingLink);
+    pendingLink = null;
+    if (target) openCamera(target); else announce('Kamera pada tautan ini tidak tersedia dalam daftar.');
+  }
 }
 
 async function loadCameras() {
@@ -642,6 +720,8 @@ function selectArea(area) {
   activeArea = area;
   search.value = '';
   statusFilter = 'all';
+  libraryFilter = 'all';
+  updateLibraryButtons();
   for (const button of document.querySelectorAll('[data-status-filter]')) {
     button.setAttribute('aria-pressed', String(button.dataset.statusFilter === 'all'));
   }
@@ -669,6 +749,8 @@ for (const button of document.querySelectorAll('[data-status-filter]')) {
 document.querySelector('#clear-filters').addEventListener('click', () => {
   search.value = '';
   statusFilter = 'all';
+  libraryFilter = 'all';
+  updateLibraryButtons();
   for (const button of document.querySelectorAll('[data-status-filter]')) {
     button.setAttribute('aria-pressed', String(button.dataset.statusFilter === 'all'));
   }
@@ -676,7 +758,7 @@ document.querySelector('#clear-filters').addEventListener('click', () => {
   beginChecks();
   search.focus();
 });
-mobileLayout.addEventListener('change', event => setView(event.matches ? 'list' : 'map'));
+mobileLayout.addEventListener('change', () => setView(currentView));
 document.querySelector('#area-city').addEventListener('click', () => selectArea('city'));
 document.querySelector('#area-regency').addEventListener('click', () => selectArea('regency'));
 search.addEventListener('input', () => {
@@ -690,5 +772,122 @@ refresh.addEventListener('click', () => {
   beginChecks();
   loadCameras();
 });
+for (const area of ['city', 'regency']) document.querySelector('#area-' + area).setAttribute('aria-pressed', String(activeArea === area));
+function shareId(camera) {
+  return camera.city ? camera.slug : new URL(camera.url).pathname.split('/').pop().replace(/\.html$/, '');
+}
+function sortCameraRows() {
+  const ranks = { playable: 0, checking: 1, pending: 2, unavailable: 3 };
+  const ordered = [...cameras].sort((a, b) => {
+    if (sortOrder === 'status') {
+      const delta = (ranks[playbackChecks.get(cameraKey(a))?.state || 'pending'] ?? 2) - (ranks[playbackChecks.get(cameraKey(b))?.state || 'pending'] ?? 2);
+      if (delta) return delta;
+    }
+    if (sortOrder === 'recent' || libraryFilter === 'recent') {
+      const delta = (recent.find(item => item.key === cameraKey(b))?.time || 0) - (recent.find(item => item.key === cameraKey(a))?.time || 0);
+      if (delta) return delta;
+    }
+    return displayName(a).localeCompare(displayName(b), 'id', { numeric: true });
+  });
+  ordered.forEach((camera, index) => {
+    const item = rowViews.get(cameraKey(camera))?.item;
+    if (item && list.children[index] !== item) list.insertBefore(item, list.children[index] || null);
+  });
+}
+function updateLibraryButtons() {
+  for (const button of document.querySelectorAll('[data-library]')) button.setAttribute('aria-pressed', String(button.dataset.library === libraryFilter));
+}
+function updateMonitorTray() {
+  document.querySelector('#monitor-tray').hidden = monitorSelection.size === 0;
+  document.querySelector('#monitor-count').textContent = monitorSelection.size;
+}
+function mountMultiCamera(camera, target, note) {
+  if (!camera.city) {
+    const frame = document.createElement('iframe');
+    const url = new URL(camera.url); url.searchParams.set('autoplay', 'true'); url.searchParams.set('mute', 'true');
+    frame.src = url.href; frame.title = 'Tayangan ' + displayName(camera);
+    frame.allow = 'autoplay; fullscreen; picture-in-picture'; frame.allowFullscreen = true;
+    frame.sandbox = 'allow-scripts allow-same-origin allow-presentation';
+    note.textContent = 'Pemutar publik · suara dimatikan'; target.append(frame);
+    multiCleanups.push(() => frame.remove());
+    return;
+  }
+  if (!camera.online) { note.textContent = 'Kamera tercatat tidak aktif.'; return; }
+  const video = document.createElement('video');
+  video.controls = true; video.autoplay = true; video.muted = true; video.playsInline = true; target.append(video);
+  let engine; let timer; let pulse; let disposed = false;
+  const cleanup = () => {
+    if (disposed) return; disposed = true;
+    clearTimeout(timer); clearInterval(pulse); engine?.destroy();
+    video.pause(); video.removeAttribute('src'); video.load();
+  };
+  multiCleanups.push(cleanup);
+  const fail = () => { note.textContent = 'Tayangan belum dapat diputar. Tekan Coba lagi.'; cleanup(); };
+  note.textContent = 'Menghubungkan tayangan…';
+  const heartbeat = () => fetch(cityRelay + 'api/stream/heartbeat/' + camera.slug, { credentials: 'omit', signal: AbortSignal.timeout(8000) }).catch(() => {});
+  heartbeat(); pulse = setInterval(heartbeat, 15000); timer = setTimeout(fail, 30000);
+  video.addEventListener('playing', () => { clearTimeout(timer); note.textContent = 'Tayangan berjalan · suara dimatikan'; });
+  video.addEventListener('error', fail);
+  const url = cityRelay + 'hls/' + camera.slug + '/index.m3u8';
+  if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = url; video.play().catch(fail); }
+  else if (window.Hls?.isSupported()) {
+    engine = new window.Hls({ maxBufferLength: 8, maxMaxBufferLength: 16, backBufferLength: 4, liveSyncDurationCount: 2 });
+    engine.on(window.Hls.Events.ERROR, (_event, data) => { if (data.fatal) fail(); });
+    engine.loadSource(url); engine.attachMedia(video);
+  } else fail();
+}
+function startMonitor() {
+  if (!monitorSelection.size) return;
+  if (!dialog.open) monitorReturnTarget = document.activeElement;
+  pauseChecks(); stopPlayer(); selectedCamera = null;
+  const opened = [...monitorSelection.values()].map(camera => ({ key: cameraKey(camera), time: Date.now() }));
+  recent = [...opened, ...recent.filter(item => !monitorSelection.has(item.key))].slice(0, 30);
+  saveLocal('pantau-recent', recent);
+  document.querySelector('#share-camera').hidden = true;
+  document.querySelector('#retry-player').hidden = false;
+  document.querySelector('#camera-title').textContent = 'Pantau bersamaan';
+  document.querySelector('#camera-group').textContent = monitorSelection.size + ' kamera · Kota & Kabupaten Cirebon';
+  document.querySelector('#player-status').textContent = 'Setiap tayangan mengikuti ketersediaan sumber dan dukungan video browser. Gunakan kontrol pada video untuk mengaktifkan suara.';
+  player.classList.add('multi-player');
+  for (const camera of monitorSelection.values()) {
+    const tile = document.createElement('section'); tile.className = 'monitor-tile';
+    const title = document.createElement('h3'); title.textContent = displayName(camera);
+    const media = document.createElement('div'); media.className = 'monitor-media';
+    const note = document.createElement('p'); note.setAttribute('role', 'status');
+    tile.append(title, media, note); player.append(tile); mountMultiCamera(camera, media, note);
+  }
+  if (!dialog.open) dialog.showModal();
+}
+for (const button of document.querySelectorAll('[data-library]')) button.addEventListener('click', () => {
+  libraryFilter = button.dataset.library; updateLibraryButtons(); updateVisibleCameras();
+});
+document.querySelector('#camera-sort').addEventListener('change', event => { sortOrder = event.target.value; sortCameraRows(); });
+document.querySelector('#clear-monitor').addEventListener('click', () => {
+  monitorSelection.clear(); updateMonitorTray();
+  for (const button of document.querySelectorAll('.monitor-action')) button.setAttribute('aria-pressed', 'false');
+});
+document.querySelector('#open-monitor').addEventListener('click', startMonitor);
+document.querySelector('#retry-player').addEventListener('click', () => {
+  if (selectedCamera) { stopPlayer(); mountSingleCamera(selectedCamera); }
+  else startMonitor();
+});
+document.querySelector('#fullscreen-player').addEventListener('click', async () => {
+  try {
+    if (!dialog.requestFullscreen) { announce('Layar penuh belum didukung browser ini.'); return; }
+    if (document.fullscreenElement) await document.exitFullscreen(); else await dialog.requestFullscreen();
+  } catch { announce('Layar penuh tidak dapat diaktifkan pada browser ini.'); }
+});
+document.querySelector('#share-camera').addEventListener('click', async () => {
+  if (!selectedCamera) return;
+  const url = new URL(location.href); url.search = ''; url.hash = '';
+  url.searchParams.set('area', selectedCamera.city ? 'city' : 'regency');
+  url.searchParams.set('camera', shareId(selectedCamera));
+  try { await navigator.clipboard.writeText(url.href); announce('Tautan kamera disalin.'); }
+  catch {
+    const field = document.querySelector('#share-link-field'); field.hidden = false; field.value = url.href; field.focus(); field.select();
+    announce('Penyalinan otomatis belum diizinkan. Salin tautan pada kolom di pemutar.');
+  }
+});
+
 setView(currentView);
 loadCameras();

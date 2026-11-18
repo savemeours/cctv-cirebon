@@ -50,3 +50,12 @@ Nama kamera dirapikan untuk dibaca, sedangkan identitas kamera tetap tersedia pa
 
 ### Penyempurnaan tampilan
 Halaman awal desktop menggunakan galeri thumbnail tiga kolom, empat pada layar lebar. Daftar mobile memakai kartu horizontal yang ringkas dengan navigasi mengambang Kamera/Peta. Jarak, skala teks, kontrol wilayah, filter, dan pemutar diseragamkan. Tombol portal sumber dan pengalihan eksternal di pemutar dihapus. Pesan kegagalan mengarahkan pengguna kembali memilih kamera atau memeriksa ulang.
+
+
+### Fitur pemantauan
+- Bintang favorit dan riwayat 30 kamera terakhir disimpan di localStorage browser, tanpa login. Koleksi mengikuti wilayah yang dipilih dan filter status aktif.
+- Urutan nama, hasil pemeriksaan pemutaran, atau waktu tontonan terakhir.
+- Ikon grid pada kartu memilih maksimal empat kamera, termasuk pilihan lintas wilayah. Multi CCTV memakai dua kolom desktop dan satu kolom mobile. Semua video, iframe, timer dan heartbeat dihentikan ketika dialog ditutup atau tayangan dicoba ulang.
+- Salin tautan langsung memakai parameter area dan camera yang dicocokkan dengan katalog publik. Browser yang menolak akses clipboard menyediakan kolom tautan untuk disalin manual.
+- Pemutar menyediakan layar penuh jika didukung browser dan Coba lagi.
+- Kontrol baru memakai Font Awesome, label aksesibel, dan status tombol terpilih. Video tetap mengikuti ketersediaan sumber dan dukungan codec perangkat.
