@@ -46,3 +46,7 @@ Hasil digunakan kembali hingga tiga menit. Tombol Muat ulang daftar mengulangi p
 Desktop menampilkan daftar kamera di samping peta, dengan pilihan tampilan kisi kamera. Mobile memulai dari kartu thumbnail dua kolom dan memakai navigasi Kamera/Peta di bawah. Pemutar mobile menggunakan layar penuh. Filter Semua, Bisa diputar, dan Belum bisa memakai hasil pemeriksaan browser yang sama pada seluruh tampilan.
 
 Nama kamera dirapikan untuk dibaca, sedangkan identitas kamera tetap tersedia pada keterangan wilayah dan judul tombol. Pilihan wilayah, pencarian, dan hasil pemeriksaan digunakan bersama ketika mengganti tampilan. Status yang belum diperiksa tetap dibedakan dari video yang gagal dimuat.
+
+
+### Penyempurnaan tampilan
+Halaman awal desktop menggunakan galeri thumbnail tiga kolom, empat pada layar lebar. Daftar mobile memakai kartu horizontal yang ringkas dengan navigasi mengambang Kamera/Peta. Jarak, skala teks, kontrol wilayah, filter, dan pemutar diseragamkan. Tombol portal sumber dan pengalihan eksternal di pemutar dihapus. Pesan kegagalan mengarahkan pengguna kembali memilih kamera atau memeriksa ulang.

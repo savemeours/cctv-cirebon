@@ -12,12 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="./style.css?v=12">
+  <link rel="stylesheet" href="./style.css?v=13">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"></script>
-  <script type="module" src="./app.js?v=12"></script>
+  <script type="module" src="./app.js?v=13"></script>
 </head>
-<body data-view="map">
+<body data-view="list">
   <a class="skip-link" href="#camera-search">Cari kamera</a>
   <header class="app-header">
     <a class="brand" href="./" aria-label="Pantau Cirebon, beranda">
@@ -29,14 +29,13 @@
       <button type="button" data-view-choice="list" aria-pressed="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Kamera</button>
     </nav>
     <div class="header-actions">
-      <a id="portal-link" class="source-link" href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer"><span>Portal sumber</span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
       <button id="refresh" class="icon-button refresh-button" type="button" aria-label="Perbarui daftar dan periksa ulang kamera" title="Periksa ulang kamera" disabled><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
     </div>
   </header>
   <main class="app-workspace" id="main-content">
     <section class="directory" aria-labelledby="directory-title">
       <div class="directory-controls">
-        <div class="directory-intro"><div><p class="eyebrow">PANTAU WILAYAH</p><h2 id="directory-title">Temukan kamera</h2></div><span class="area-emblem" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span></div>
+        <div class="directory-intro"><div><p class="eyebrow">PANTAU CIREBON</p><h2 id="directory-title">Jelajahi kamera</h2></div><span class="area-emblem" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span></div>
         <div class="area-switch" role="group" aria-label="Wilayah CCTV">
           <button id="area-city" type="button" aria-pressed="true">Kota Cirebon <span id="city-count">—</span></button>
           <button id="area-regency" type="button" aria-pressed="false">Kabupaten <span id="regency-count">—</span></button>
@@ -55,7 +54,7 @@
         <noscript><p class="noscript-message">Aktifkan JavaScript untuk menampilkan daftar dan memutar kamera.</p></noscript>
       </div>
       <footer class="directory-footer">
-        <details class="data-source"><summary><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Sumber & pemeriksaan <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary><div><p id="camera-source">Memuat sumber data…</p><p>Indikator mengikuti hasil uji di browser ini. Thumbnail diambil dari video yang berhasil dimuat.</p><p><a href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">CCTV Kota Cirebon</a><span aria-hidden="true"> · </span><a href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">Socakaton</a></p><p>Situs independen.</p></div></details>
+        <details class="data-source"><summary><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Tentang pemeriksaan <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary><div><p id="camera-source">Memuat sumber data…</p><p>Indikator mengikuti hasil uji di browser ini. Thumbnail diambil dari video yang berhasil dimuat.</p><p>Situs independen.</p></div></details>
       </footer>
     </section>
     <section class="map-panel" id="map-panel" aria-labelledby="map-title">
@@ -72,7 +71,7 @@
   <dialog id="camera-dialog" class="player-dialog" aria-labelledby="camera-title">
     <div class="player-header"><span class="player-icon" aria-hidden="true"><i class="fa-solid fa-video"></i></span><div class="player-heading"><p class="player-eyebrow">TAYANGAN CCTV</p><h2 id="camera-title"></h2><p id="camera-group"></p></div><form method="dialog"><button type="submit" class="player-close" autofocus aria-label="Tutup tayangan"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form></div>
     <div id="camera-player" class="camera-player"></div>
-    <div class="player-body"><p id="player-status" role="status"></p><p class="player-help">Jika video belum tampil, coba buka tayangan melalui <a id="player-portal" href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">portal sumber</a>.</p><a id="camera-link" class="player-external" target="_blank" rel="noopener noreferrer">Buka tayangan <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></div>
+    <div class="player-body"><p id="player-status" role="status"></p></div>
   </dialog>
   <script type="application/json" id="camera-catalog">
 {

@@ -9,7 +9,7 @@ const areaConfig = {
 let activeArea = 'city';
 let statusFilter = 'all';
 const mobileLayout = window.matchMedia('(max-width: 800px)');
-let currentView = mobileLayout.matches ? 'list' : 'map';
+let currentView = 'list';
 let hls;
 let heartbeatTimer;
 let connectionTimer;
@@ -28,7 +28,7 @@ const list = document.querySelector('#camera-list');
 const refresh = document.querySelector('#refresh');
 const dialog = document.querySelector('#camera-dialog');
 const player = document.querySelector('#camera-player');
-const streamLink = document.querySelector('#camera-link');
+
 
 let map;
 let markers;
@@ -413,9 +413,8 @@ function stopPlayer() {
 
 function openCityCamera(camera) {
   const message = document.querySelector('#player-status');
-  streamLink.textContent = 'Buka portal Kota Cirebon ↗';
   if (!camera.online) {
-    message.textContent = 'Kamera tercatat tidak aktif pada pembaruan sumber. Periksa ketersediaannya di portal Kota Cirebon.';
+    message.textContent = 'Kamera tercatat tidak aktif pada pembaruan sumber. Silakan pilih kamera lainnya.';
     return;
   }
   const video = document.createElement('video');
@@ -431,7 +430,7 @@ function openCityCamera(camera) {
     clearInterval(heartbeatTimer);
     hls?.destroy();
     hls = undefined;
-    message.textContent = 'Tayangan belum dapat diputar di halaman ini. Buka portal Kota Cirebon dan pilih ' + camera.name + '.';
+    message.textContent = 'Tayangan belum dapat diputar. Tutup pemutar dan coba kamera lainnya atau periksa ulang daftar.';
   };
   connectionTimer = setTimeout(failed, 30000);
   video.addEventListener('playing', () => {
@@ -481,9 +480,6 @@ function openCamera(camera) {
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
   document.querySelector('#camera-title').textContent = displayName(camera);
   document.querySelector('#camera-group').textContent = locationName(camera) + ' · ' + areaConfig[activeArea].label;
-  streamLink.href = camera.portalUrl || camera.url;
-  streamLink.textContent = 'Buka tayangan ↗';
-  document.querySelector('#player-portal').href = areaConfig[activeArea].portal;
   document.querySelector('#player-status').textContent = '';
   dialog.showModal();
   dialog.scrollTop = 0;
@@ -652,9 +648,6 @@ function selectArea(area) {
   for (const name of ['city', 'regency']) {
     document.querySelector('#area-' + name).setAttribute('aria-pressed', String(name === area));
   }
-  const portal = document.querySelector('#portal-link');
-  portal.href = areaConfig[area].portal;
-  portal.setAttribute('aria-label', 'Buka portal sumber ' + areaConfig[area].label);
   map?.setView(areaConfig[area].center, areaConfig[area].zoom);
   showArea();
   loadCameras();
