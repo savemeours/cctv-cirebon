@@ -42,8 +42,53 @@ function rewritePlaylist(text, baseUrl) {
   }).join('\n');
 }
 
+const recentSegments = new Map();
+let retainedBytes = 0;
+
+function removeSegment(path) {
+  const entry = recentSegments.get(path);
+  retainedBytes -= entry?.size || 0;
+  recentSegments.delete(path);
+}
+
+function loadSegment(path) {
+  const now = Date.now();
+  for (const [key, entry] of recentSegments) {
+    if (entry.expires < now) removeSegment(key);
+  }
+  const existing = recentSegments.get(path);
+  if (existing) return existing.promise;
+  while (recentSegments.size >= 32) removeSegment(recentSegments.keys().next().value);
+  const entry = { expires: now + 60000, size: 0 };
+  entry.promise = (async () => {
+    try {
+      const response = await fetch(upstreamOrigin + path.slice(5), {
+        redirect: 'manual', signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok || Number(response.headers.get('Content-Length')) > 8 * 1024 * 1024) {
+        removeSegment(path);
+        return null;
+      }
+      const bytes = await response.arrayBuffer();
+      if (recentSegments.get(path) === entry) {
+        entry.size = bytes.byteLength;
+        retainedBytes += entry.size;
+        while (retainedBytes > 24 * 1024 * 1024 && recentSegments.size) {
+          removeSegment(recentSegments.keys().next().value);
+        }
+      }
+      return bytes;
+    } catch {
+      if (recentSegments.get(path) === entry) removeSegment(path);
+      return null;
+    }
+  })();
+  recentSegments.set(path, entry);
+  return entry.promise;
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (!['GET', 'HEAD'].includes(request.method)) return reply('Method not allowed', 405);
@@ -51,6 +96,13 @@ export default {
     const path = upstreamPath(url.pathname);
     if (!path || url.search) return reply('Not found', 404);
 
+    if (path.endsWith('.ts') && request.method === 'GET' && !request.headers.has('Range')) {
+      const bytes = await loadSegment(url.pathname);
+      if (!bytes) return reply('Segment is no longer available', 404);
+      return new Response(bytes, {
+        headers: { ...cors, 'Content-Type': 'video/mp2t', 'Cache-Control': 'public, max-age=60' }
+      });
+    }
     const headers = new Headers();
     if (request.headers.has('Range')) headers.set('Range', request.headers.get('Range'));
     try {
@@ -70,9 +122,14 @@ export default {
       if (path.endsWith('.m3u8') && upstream.ok && request.method !== 'HEAD') {
         const playlist = await upstream.text();
         if (!playlist.trimStart().startsWith('#EXTM3U')) return reply('Invalid upstream playlist', 502);
+        const rewritten = rewritePlaylist(playlist, upstreamOrigin + path);
+        const preload = Promise.all(rewritten.split('\n')
+          .filter(line => line.startsWith('/city/') && line.endsWith('.ts'))
+          .map(loadSegment));
+        ctx.waitUntil(preload);
         responseHeaders.delete('Content-Length');
         responseHeaders.set('Content-Type', 'application/vnd.apple.mpegurl');
-        return new Response(rewritePlaylist(playlist, upstreamOrigin + path), {
+        return new Response(rewritten, {
           status: upstream.status,
           headers: responseHeaders
         });
