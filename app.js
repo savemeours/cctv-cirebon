@@ -34,6 +34,7 @@ const playbackChecks = new Map();
 const rowViews = new Map();
 const mapViews = new Map();
 let checkGeneration = 0;
+let searchCheckTimer;
 const checkCancellations = new Set();
 const checkSummary = document.querySelector('#camera-check-status');
 
@@ -99,6 +100,7 @@ function updateCheckSummary() {
 }
 
 function pauseChecks() {
+  clearTimeout(searchCheckTimer);
   checkGeneration++;
   for (const cancel of [...checkCancellations]) cancel();
 }
@@ -216,7 +218,12 @@ function probeCamera(camera) {
 function beginChecks() {
   pauseChecks();
   const generation = checkGeneration;
-  const entries = [...cameras];
+  const query = search.value.trim().toLocaleLowerCase('id');
+  const entries = [...cameras].sort((a, b) => {
+    const firstMatches = (a.name + ' ' + a.group).toLocaleLowerCase('id').includes(query);
+    const secondMatches = (b.name + ' ' + b.group).toLocaleLowerCase('id').includes(query);
+    return Number(secondMatches) - Number(firstMatches);
+  });
   let next = 0;
   const worker = async () => {
     while (generation === checkGeneration && !dialog.open && next < entries.length) {
@@ -549,7 +556,11 @@ function selectArea(area) {
 
 document.querySelector('#area-city').addEventListener('click', () => selectArea('city'));
 document.querySelector('#area-regency').addEventListener('click', () => selectArea('regency'));
-search.addEventListener('input', renderCameras);
+search.addEventListener('input', () => {
+  renderCameras();
+  clearTimeout(searchCheckTimer);
+  searchCheckTimer = setTimeout(beginChecks, 300);
+});
 refresh.addEventListener('click', () => {
   for (const camera of cameras) playbackChecks.delete(cameraKey(camera));
   renderCameras();
