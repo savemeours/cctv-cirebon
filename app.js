@@ -40,7 +40,7 @@ if (window.L) {
   }).addTo(map);
   markers = L.layerGroup().addTo(map);
   resetMap.disabled = false;
-  resetMap.addEventListener('click', () => map.setView(areaConfig[activeArea].center, areaConfig[activeArea].zoom));
+  resetMap.addEventListener('click', fitAreaMap);
 } else {
   mapPlaceholder.textContent = 'Peta dasar tidak dapat dimuat. Anda masih dapat menggunakan daftar kamera.';
 }
@@ -57,6 +57,19 @@ function normalizeCamera(row) {
   }
   if (url.protocol !== 'https:' || !viewerHosts.has(url.hostname) || url.username || url.password) return null;
 
+  const originalUrl = url.href;
+  if (url.hostname === 'socakaton.cirebonkab.go.id' && url.pathname === '/stream/player') {
+    try {
+      const direct = new URL(url.searchParams.get('url'));
+      if (direct.protocol === 'https:' && direct.hostname === 'cctv-backend.cirebonkab.go.id' &&
+          !direct.username && !direct.password && /^\/[a-f0-9-]+\.html$/.test(direct.pathname)) {
+        url = direct;
+      }
+    } catch {
+      // Keep the original public player when its nested URL is unavailable.
+    }
+  }
+
   const parseCoordinate = (value, limit) => {
     if ((typeof value !== 'number' && typeof value !== 'string') || !String(value).trim()) return null;
     const number = Number(value);
@@ -68,7 +81,8 @@ function normalizeCamera(row) {
     name: row.nama.trim(),
     group: typeof row.group === 'string' ? row.group.trim() : '',
     coordinates: lat !== null && lng !== null ? [lat, lng] : null,
-    url: url.href
+    url: url.href,
+    portalUrl: originalUrl
   };
 }
 
@@ -171,7 +185,7 @@ function openCamera(camera) {
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
   document.querySelector('#camera-title').textContent = camera.name;
   document.querySelector('#camera-group').textContent = camera.group;
-  streamLink.href = camera.url;
+  streamLink.href = camera.portalUrl || camera.url;
   streamLink.textContent = 'Buka tayangan ↗';
   document.querySelector('#player-portal').href = areaConfig[activeArea].portal;
   document.querySelector('#player-status').textContent = '';
@@ -183,7 +197,11 @@ function openCamera(camera) {
   }
   const frame = document.createElement('iframe');
   frame.title = 'Tayangan ' + camera.name;
-  frame.src = camera.url;
+  const playerUrl = new URL(camera.url);
+  playerUrl.searchParams.set('autoplay', 'true');
+  playerUrl.searchParams.set('mute', 'true');
+  frame.src = playerUrl.href;
+  frame.allow = 'autoplay; fullscreen; picture-in-picture';
   frame.sandbox = 'allow-scripts allow-same-origin allow-presentation';
   frame.allowFullscreen = true;
   player.replaceChildren(frame);
@@ -254,7 +272,7 @@ async function loadCameras() {
     catalogs.set(area, area === 'city' ? parseCityCameras(snapshot) : parseCameras(snapshot));
     sourceLabels.set(area, area === 'city'
       ? 'Salinan daftar Kota Cirebon · 18 November 2026'
-      : 'Salinan data Socakaton · 17 November 2026');
+      : 'Salinan data Socakaton · 18 November 2026');
     showArea();
   }
   cameraSource.textContent = sourceLabels.get(area) + '. Memeriksa pembaruan…';
@@ -279,6 +297,16 @@ async function loadCameras() {
   }
 }
 
+function fitAreaMap() {
+  if (!map) return;
+  const locations = (catalogs.get(activeArea) || []).map(camera => camera.coordinates).filter(Boolean);
+  if (locations.length) {
+    map.fitBounds(locations, { padding: [28, 28], maxZoom: 13 });
+  } else {
+    map.setView(areaConfig[activeArea].center, areaConfig[activeArea].zoom);
+  }
+}
+
 function selectArea(area) {
   if (activeArea === area) return;
   dialog.close();
@@ -294,6 +322,7 @@ function selectArea(area) {
   map?.setView(areaConfig[area].center, areaConfig[area].zoom);
   showArea();
   loadCameras();
+  fitAreaMap();
 }
 
 document.querySelector('#area-city').addEventListener('click', () => selectArea('city'));

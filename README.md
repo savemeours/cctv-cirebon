@@ -30,3 +30,7 @@ Kode sumber penghubung tersedia di city-relay-worker.js dan dijalankan sebagai W
 Sebagian kamera, termasuk Depan Masjid Raya At-Taqwa pada pengujian 18 November 2026, mengirim video HEVC/H.265. Pemutaran format ini memerlukan dukungan codec pada peramban dan sistem operasi. Simpang Krucuk mengirim H.264 dan telah diuji berjalan di halaman GitHub Pages.
 
 Penghubung mengambil segmen terbaru lebih awal dan menahannya sementara hingga 60 detik dalam memori proses dengan batas total 24 MiB. Ini membantu kamera dengan daftar segmen yang cepat berganti. Jika proses dimulai ulang, segmen diminta kembali dari sumber.
+
+## Pemeriksaan Kabupaten 18 November 2026
+
+Salinan JSON terbaru berisi 41 kamera publik. Pemutar Kabupaten mengirim parameter autoplay=true dan mute=true, serta izin autoplay pada iframe. Pembungkus Socakaton yang menyertakan URL pemutar publik diuraikan ke URL tersebut setelah validasi host dan format. Tombol atur ulang peta serta pemilihan wilayah menyesuaikan batas tampilan dengan seluruh titik wilayah.
