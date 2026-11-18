@@ -7,10 +7,14 @@ const areaConfig = {
   regency: { label: 'Kabupaten Cirebon', portal: source, center: [-6.717, 108.5], zoom: 11 }
 };
 let activeArea = 'city';
+let statusFilter = 'all';
+const mobileLayout = window.matchMedia('(max-width: 800px)');
+let currentView = mobileLayout.matches ? 'list' : 'map';
 let hls;
 let heartbeatTimer;
 let connectionTimer;
 let activeVideo;
+let playerReturnKey;
 const catalogs = new Map();
 const sourceLabels = new Map();
 const center = [-6.717, 108.5];
@@ -37,6 +41,82 @@ let checkGeneration = 0;
 let searchCheckTimer;
 const checkCancellations = new Set();
 const checkSummary = document.querySelector('#camera-check-status');
+
+function displayName(camera) {
+  const name = camera.name
+    .replace(/^(?:8001\s*-\s*)?\[D\d+\]\s*/i, '')
+    .replace(/^KEC\.\s*[^-]+-/i, '');
+  const acronyms = new Set(['PKK', 'DPRD', 'PD', 'PP', 'SD', 'SMP', 'ATCS', 'CCTV', 'RSUD']);
+  return name.toLowerCase().replace(/\p{L}+/gu, word =>
+    acronyms.has(word.toUpperCase()) ? word.toUpperCase() : word[0].toUpperCase() + word.slice(1));
+}
+
+function locationName(camera) {
+  if (camera.city) return camera.group.replace('Kota Cirebon · ', '');
+  const location = camera.name.match(/KEC\.\s*([^-]+)/i)?.[1]?.trim();
+  const label = location ? location.toLowerCase().replace(/\b\p{L}/gu, letter => letter.toUpperCase()) : 'Kabupaten Cirebon';
+  const code = camera.name.match(/\[(D\d+)\]/)?.[1];
+  return code ? label + ' · ' + code : label;
+}
+
+function isCameraVisible(camera) {
+  const query = search.value.trim().toLocaleLowerCase('id');
+  const matchesQuery = (camera.name + ' ' + camera.group).toLocaleLowerCase('id').includes(query);
+  const state = playbackChecks.get(cameraKey(camera))?.state;
+  return matchesQuery && (statusFilter === 'all' || state === statusFilter);
+}
+
+function updateVisibleCameras() {
+  let count = 0;
+  for (const camera of cameras) {
+    const key = cameraKey(camera);
+    const visible = isCameraVisible(camera);
+    if (visible) count++;
+    const view = rowViews.get(key);
+    if (view) view.item.hidden = !visible;
+    const marker = mapViews.get(key);
+    if (marker && markers) {
+      if (visible && !markers.hasLayer(marker)) markers.addLayer(marker);
+      if (!visible && markers.hasLayer(marker)) markers.removeLayer(marker);
+    }
+  }
+  const message = count + ' kamera';
+  if (status.textContent !== message) status.textContent = message;
+  document.querySelector('#camera-empty').hidden = count !== 0;
+  const noSearch = !search.value.trim();
+  const title = document.querySelector('#empty-title');
+  const description = document.querySelector('#empty-description');
+  title.textContent = statusFilter === 'playable' && noSearch
+    ? 'Belum ada kamera terverifikasi' : 'Kamera tidak ditemukan';
+  description.textContent = statusFilter === 'playable' && noSearch
+    ? (cameras.some(camera => !playbackChecks.has(cameraKey(camera)) || playbackChecks.get(cameraKey(camera)).state === 'checking')
+      ? 'Pemeriksaan masih berjalan. Anda dapat melihat semua kamera sambil menunggu.'
+      : 'Belum ada video yang berhasil diputar di browser ini. Pilih Semua untuk mencoba kamera lainnya.')
+    : 'Coba nama lokasi lain atau tampilkan semua kamera.';
+}
+
+function setView(view) {
+  currentView = view;
+  document.body.dataset.view = view;
+  for (const button of document.querySelectorAll('[data-view-choice]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.viewChoice === view));
+  }
+  requestAnimationFrame(() => {
+    map?.invalidateSize();
+    if (view === 'map') fitAreaMap();
+  });
+}
+
+function updateAreaInfo() {
+  document.querySelector('#map-title').textContent = areaConfig[activeArea].label;
+  document.querySelector('#map-camera-count').textContent = cameras.length + ' titik kamera publik';
+  for (const area of ['city', 'regency']) {
+    const id = area === 'city' ? '#city-catalog' : '#camera-catalog';
+    const snapshot = JSON.parse(document.querySelector(id).textContent);
+    const initialCount = area === 'city' ? snapshot.length : snapshot.data.length;
+    document.querySelector('#' + area + '-count').textContent = catalogs.get(area)?.length ?? initialCount;
+  }
+}
 
 function cameraKey(camera) {
   return camera.city ? 'city:' + camera.slug : 'regency:' + camera.url;
@@ -72,6 +152,7 @@ function updateCheckView(camera) {
   const view = rowViews.get(key);
   if (view) {
     view.badge.textContent = checkLabel(result);
+    view.button.dataset.state = result?.state || 'pending';
     view.badge.title = result?.checkedAt && result.state !== 'checking'
       ? 'Diperiksa ' + new Date(result.checkedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       : '';
@@ -94,9 +175,12 @@ function updateCheckSummary() {
     if (state === 'unavailable') unavailable++;
   }
   const pending = cameras.length - playable - unavailable;
-  checkSummary.textContent = cameras.length
-    ? playable + ' bisa diputar · ' + unavailable + ' belum bisa · ' + pending + ' belum selesai diperiksa'
-    : '';
+  checkSummary.textContent = pending ? pending + ' belum diperiksa' : 'Pemeriksaan selesai';
+  document.querySelector('#count-all').textContent = cameras.length;
+  document.querySelector('#count-playable').textContent = playable;
+  document.querySelector('#count-unavailable').textContent = unavailable;
+  updateVisibleCameras();
+
 }
 
 function pauseChecks() {
@@ -248,6 +332,7 @@ if (window.L) {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
   markers = L.layerGroup().addTo(map);
+  map.zoomControl.setPosition('bottomright');
   resetMap.disabled = false;
   resetMap.addEventListener('click', fitAreaMap);
 } else {
@@ -392,9 +477,10 @@ function openCityCamera(camera) {
 function openCamera(camera) {
   if (dialog.open) return;
   pauseChecks();
+  playerReturnKey = cameraKey(camera);
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
-  document.querySelector('#camera-title').textContent = camera.name;
-  document.querySelector('#camera-group').textContent = camera.group;
+  document.querySelector('#camera-title').textContent = displayName(camera);
+  document.querySelector('#camera-group').textContent = locationName(camera) + ' · ' + areaConfig[activeArea].label;
   streamLink.href = camera.portalUrl || camera.url;
   streamLink.textContent = 'Buka tayangan ↗';
   document.querySelector('#player-portal').href = areaConfig[activeArea].portal;
@@ -420,31 +506,29 @@ function openCamera(camera) {
 dialog.addEventListener('close', () => {
   stopPlayer();
   beginChecks();
+  const returnTarget = rowViews.get(playerReturnKey)?.button;
+  if (returnTarget?.getClientRects().length) returnTarget.focus({ preventScroll: true });
 });
 
 function renderCameras() {
-  const query = search.value.trim().toLocaleLowerCase('id');
-  const matches = cameras.filter(camera =>
-    (camera.name + ' ' + camera.group).toLocaleLowerCase('id').includes(query));
+  const matches = cameras;
   list.replaceChildren();
   rowViews.clear();
   mapViews.clear();
   markers?.clearLayers();
-  status.textContent = matches.length
-    ? matches.length + ' dari ' + cameras.length + ' kamera publik'
-    : cameras.length ? 'Tidak ada kamera yang cocok.' : 'Tidak ada tayangan publik HTTPS dalam daftar sumber.';
-
   for (const camera of matches) {
     const name = document.createElement('span');
-    name.textContent = camera.name;
+    name.textContent = displayName(camera);
+    name.className = 'camera-name';
     const group = document.createElement('small');
-    group.textContent = camera.group || 'Kamera publik';
+    group.textContent = locationName(camera);
+    group.className = 'camera-location';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'camera-row';
     const image = document.createElement('img');
     image.className = 'camera-thumbnail';
-    image.alt = 'Pratinjau ' + camera.name;
+    image.alt = 'Pratinjau ' + displayName(camera);
     image.hidden = true;
     const information = document.createElement('span');
     information.className = 'camera-information';
@@ -452,12 +536,30 @@ function renderCameras() {
     const detail = document.createElement('small');
     detail.className = 'camera-check-detail';
     information.append(name, group, badge, detail);
-    button.append(image, information);
-    rowViews.set(cameraKey(camera), { image, badge, detail });
+    const media = document.createElement('span');
+    media.className = 'camera-media';
+    const placeholder = document.createElement('span');
+    placeholder.className = 'camera-placeholder';
+    placeholder.setAttribute('aria-hidden', 'true');
+    const cameraIcon = document.createElement('i');
+    cameraIcon.className = 'fa-solid fa-video';
+    const unavailableIcon = document.createElement('i');
+    unavailableIcon.className = 'fa-solid fa-video-slash';
+    placeholder.append(cameraIcon, unavailableIcon);
+    const play = document.createElement('span');
+    play.className = 'camera-play';
+    play.setAttribute('aria-hidden', 'true');
+    const playIcon = document.createElement('i');
+    playIcon.className = 'fa-solid fa-play';
+    play.append(playIcon);
+    media.append(placeholder, image, play);
+    button.append(media, information);
+    button.title = camera.name;
     button.addEventListener('click', () => openCamera(camera));
     const item = document.createElement('li');
     item.append(button);
     list.append(item);
+    rowViews.set(cameraKey(camera), { image, badge, detail, button, item });
 
     if (markers && camera.coordinates) {
       const marker = L.marker(camera.coordinates, {
@@ -488,6 +590,7 @@ function showArea() {
   currentSource = sourceLabels.get(activeArea) || '';
   search.disabled = cameras.length === 0;
   cameraSource.textContent = currentSource;
+  updateAreaInfo();
   renderCameras();
   beginChecks();
 }
@@ -542,18 +645,45 @@ function selectArea(area) {
   stopPlayer();
   activeArea = area;
   search.value = '';
+  statusFilter = 'all';
+  for (const button of document.querySelectorAll('[data-status-filter]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.statusFilter === 'all'));
+  }
   for (const name of ['city', 'regency']) {
     document.querySelector('#area-' + name).setAttribute('aria-pressed', String(name === area));
   }
   const portal = document.querySelector('#portal-link');
   portal.href = areaConfig[area].portal;
-  portal.textContent = 'Portal ' + areaConfig[area].label + ' ↗';
+  portal.setAttribute('aria-label', 'Buka portal sumber ' + areaConfig[area].label);
   map?.setView(areaConfig[area].center, areaConfig[area].zoom);
   showArea();
   loadCameras();
   fitAreaMap();
 }
 
+for (const button of document.querySelectorAll('[data-view-choice]')) {
+  button.addEventListener('click', () => setView(button.dataset.viewChoice));
+}
+for (const button of document.querySelectorAll('[data-status-filter]')) {
+  button.addEventListener('click', () => {
+    statusFilter = button.dataset.statusFilter;
+    for (const choice of document.querySelectorAll('[data-status-filter]')) {
+      choice.setAttribute('aria-pressed', String(choice === button));
+    }
+    updateVisibleCameras();
+  });
+}
+document.querySelector('#clear-filters').addEventListener('click', () => {
+  search.value = '';
+  statusFilter = 'all';
+  for (const button of document.querySelectorAll('[data-status-filter]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.statusFilter === 'all'));
+  }
+  renderCameras();
+  beginChecks();
+  search.focus();
+});
+mobileLayout.addEventListener('change', event => setView(event.matches ? 'list' : 'map'));
 document.querySelector('#area-city').addEventListener('click', () => selectArea('city'));
 document.querySelector('#area-regency').addEventListener('click', () => selectArea('regency'));
 search.addEventListener('input', () => {
@@ -567,5 +697,5 @@ refresh.addEventListener('click', () => {
   beginChecks();
   loadCameras();
 });
+setView(currentView);
 loadCameras();
-

@@ -40,3 +40,9 @@ Salinan JSON terbaru berisi 41 kamera publik. Pemutar Kabupaten mengirim paramet
 Halaman menguji aliran video pada browser pengunjung dengan maksimum dua pemeriksaan bersamaan. Status Bisa diputar diberikan setelah bingkai video berhasil didekode. Thumbnail diambil dari bingkai tersebut dan hanya disimpan dalam memori halaman. Status Belum bisa diputar berarti pemeriksaan pada browser ini gagal, melewati 25 detik, atau sumber menandai kamera tidak aktif. Status ini mengikuti dukungan codec dan jaringan browser.
 
 Hasil digunakan kembali hingga tiga menit. Tombol Muat ulang daftar mengulangi pemeriksaan. Membuka pemutar menghentikan pemeriksaan latar belakang, yang dilanjutkan setelah dialog ditutup. Warna titik peta mengikuti hasil pemeriksaan.
+
+## Tata letak desktop dan mobile
+
+Desktop menampilkan daftar kamera di samping peta, dengan pilihan tampilan kisi kamera. Mobile memulai dari kartu thumbnail dua kolom dan memakai navigasi Kamera/Peta di bawah. Pemutar mobile menggunakan layar penuh. Filter Semua, Bisa diputar, dan Belum bisa memakai hasil pemeriksaan browser yang sama pada seluruh tampilan.
+
+Nama kamera dirapikan untuk dibaca, sedangkan identitas kamera tetap tersedia pada keterangan wilayah dan judul tombol. Pilihan wilayah, pencarian, dan hasil pemeriksaan digunakan bersama ketika mengganti tampilan. Status yang belum diperiksa tetap dibedakan dari video yang gagal dimuat.

@@ -2,62 +2,77 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Peta CCTV publik Kota dan Kabupaten Cirebon dari portal CCTV resmi.">
-  <title>Pantau Cirebon · CCTV Publik</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Temukan CCTV publik Kota dan Kabupaten Cirebon. Lihat peta lokasi, hasil pemeriksaan video, dan thumbnail kamera.">
+  <title>Pantau Cirebon · Peta & Kamera Publik</title>
+  <link rel="canonical" href="https://savemeours.github.io/cctv-cirebon/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="./style.css?v=9">
+  <link rel="stylesheet" href="./style.css?v=12">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"></script>
-  <script type="module" src="./app.js?v=11"></script>
+  <script type="module" src="./app.js?v=12"></script>
 </head>
-<body>
-  <header class="topbar">
-    <div class="wrap top-inner">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">◉</span> Pantau Cirebon</div>
-      <a id="portal-link" class="external" href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">Portal Kota Cirebon <span aria-hidden="true">↗</span></a>
+<body data-view="map">
+  <a class="skip-link" href="#camera-search">Cari kamera</a>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="Pantau Cirebon, beranda">
+      <span class="brand-symbol" aria-hidden="true"><i class="fa-solid fa-video"></i></span>
+      <span><h1>Pantau<span>Cirebon</span></h1><small>CCTV Kota & Kabupaten</small></span>
+    </a>
+    <nav class="desktop-views view-switch" aria-label="Tampilan">
+      <button type="button" data-view-choice="map" aria-pressed="true"><i class="fa-regular fa-map" aria-hidden="true"></i> Peta</button>
+      <button type="button" data-view-choice="list" aria-pressed="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Kamera</button>
+    </nav>
+    <div class="header-actions">
+      <a id="portal-link" class="source-link" href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer"><span>Portal sumber</span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+      <button id="refresh" class="icon-button refresh-button" type="button" aria-label="Perbarui daftar dan periksa ulang kamera" title="Periksa ulang kamera" disabled><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
     </div>
   </header>
-  <main class="wrap">
-    <div class="intro">
-      <p class="region">KOTA &amp; KABUPATEN CIREBON</p>
-      <h1>Peta CCTV Publik</h1>
-      <p>Pilih wilayah, temukan kamera, dan buka tayangan publiknya.</p>
-    </div>
-    <noscript><p>Aktifkan JavaScript untuk memuat peta dan daftar kamera.</p></noscript>
-    <div class="area-tabs" role="group" aria-label="Wilayah CCTV">
-      <button id="area-city" type="button" aria-pressed="true">Kota Cirebon</button>
-      <button id="area-regency" type="button" aria-pressed="false">Kabupaten Cirebon</button>
-    </div>
-    <div class="workspace">
-      <section class="map-panel" aria-labelledby="map-title">
-        <div class="panel-heading"><h2 id="map-title">Peta lokasi</h2><button id="reset-map" type="button" disabled>Atur ulang peta</button></div>
-        <div id="map" aria-label="Peta lokasi CCTV"><p id="map-placeholder">Memuat peta Cirebon…</p></div>
-      </section>
-      <section class="directory" aria-labelledby="directory-title">
-        <div class="directory-head">
-          <h2 id="directory-title">Daftar kamera</h2>
-          <label for="camera-search">Cari nama atau grup</label>
-          <input id="camera-search" type="search" placeholder="Nama lokasi atau grup" autocomplete="off" disabled>
-          <p id="camera-status" role="status">Memuat daftar kamera…</p>
-          <p id="camera-source" role="status"></p>
-          <p id="camera-check-status" role="status"></p>
-          <button id="refresh" type="button" hidden>Muat ulang daftar</button>
+  <main class="app-workspace" id="main-content">
+    <section class="directory" aria-labelledby="directory-title">
+      <div class="directory-controls">
+        <div class="directory-intro"><div><p class="eyebrow">PANTAU WILAYAH</p><h2 id="directory-title">Temukan kamera</h2></div><span class="area-emblem" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span></div>
+        <div class="area-switch" role="group" aria-label="Wilayah CCTV">
+          <button id="area-city" type="button" aria-pressed="true">Kota Cirebon <span id="city-count">—</span></button>
+          <button id="area-regency" type="button" aria-pressed="false">Kabupaten <span id="regency-count">—</span></button>
         </div>
-        <ul id="camera-list" aria-label="Kamera CCTV"></ul>
-      </section>
-    </div>
-    <footer>Sumber data <a href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">CCTV Kota Cirebon</a> dan <a href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">Socakaton · Diskominfo Kabupaten Cirebon</a>. Situs independen.</footer>
+        <label class="search-box" for="camera-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="sr-only">Cari nama atau lokasi kamera</span><input id="camera-search" type="search" placeholder="Cari lokasi atau nama kamera" autocomplete="off" disabled></label>
+        <div class="status-filters" role="group" aria-label="Filter hasil pemeriksaan">
+          <button type="button" data-status-filter="all" aria-pressed="true">Semua <span id="count-all">0</span></button>
+          <button type="button" data-status-filter="playable" aria-pressed="false"><span class="status-dot good" aria-hidden="true"></span>Bisa diputar <span id="count-playable">0</span></button>
+          <button type="button" data-status-filter="unavailable" aria-pressed="false"><span class="status-dot bad" aria-hidden="true"></span>Belum bisa <span id="count-unavailable">0</span></button>
+        </div>
+      </div>
+      <div class="directory-result"><p id="camera-status" role="status">Memuat kamera…</p><span class="result-note"><span class="status-dot" aria-hidden="true"></span><span id="camera-check-status">Menyiapkan pemeriksaan</span></span></div>
+      <div class="camera-scroll">
+        <ul id="camera-list" class="camera-list" aria-label="Kamera CCTV"></ul>
+        <div id="camera-empty" class="empty-state" hidden><span aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span><h3 id="empty-title">Kamera tidak ditemukan</h3><p id="empty-description">Coba nama lokasi lain atau tampilkan semua kamera.</p><button id="clear-filters" type="button" class="secondary-button">Tampilkan semua</button></div>
+        <noscript><p class="noscript-message">Aktifkan JavaScript untuk menampilkan daftar dan memutar kamera.</p></noscript>
+      </div>
+      <footer class="directory-footer">
+        <details class="data-source"><summary><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Sumber & pemeriksaan <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary><div><p id="camera-source">Memuat sumber data…</p><p>Indikator mengikuti hasil uji di browser ini. Thumbnail diambil dari video yang berhasil dimuat.</p><p><a href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">CCTV Kota Cirebon</a><span aria-hidden="true"> · </span><a href="https://socakaton.cirebonkab.go.id/" target="_blank" rel="noopener noreferrer">Socakaton</a></p><p>Situs independen.</p></div></details>
+      </footer>
+    </section>
+    <section class="map-panel" id="map-panel" aria-labelledby="map-title">
+      <div id="map" aria-label="Peta lokasi CCTV"><p id="map-placeholder">Memuat peta Cirebon…</p></div>
+      <div class="map-caption"><span class="map-caption-icon" aria-hidden="true"><i class="fa-regular fa-map"></i></span><div><h2 id="map-title">Kota Cirebon</h2><p id="map-camera-count">Memuat titik kamera…</p></div></div>
+      <button id="reset-map" class="map-reset" type="button" disabled><i class="fa-solid fa-expand" aria-hidden="true"></i><span>Semua titik</span></button>
+      <div class="map-legend" aria-label="Legenda status kamera"><span><b class="status-dot good" aria-hidden="true"></b>Bisa diputar</span><span><b class="status-dot bad" aria-hidden="true"></b>Belum bisa</span><span><b class="status-dot" aria-hidden="true"></b>Belum diperiksa</span></div>
+    </section>
   </main>
-  <dialog id="camera-dialog" aria-labelledby="camera-title">
-    <div class="dialog-head">
-      <div><h2 id="camera-title"></h2><p id="camera-group"></p></div>
-      <form method="dialog"><button type="submit" autofocus>Tutup</button></form>
-    </div>
-    <div id="camera-player"></div>
-    <p id="player-status" role="status"></p>
-    <p class="player-help">Jika tayangan tidak tampil, buka tayangan di tab baru atau kunjungi <a id="player-portal" href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">portal resmi wilayah</a>.</p>
-    <a id="camera-link" class="external" target="_blank" rel="noopener noreferrer">Buka tayangan ↗</a>
+  <nav class="mobile-views" aria-label="Tampilan mobile">
+    <button type="button" data-view-choice="list" aria-pressed="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><span>Kamera</span></button>
+    <button type="button" data-view-choice="map" aria-pressed="true"><i class="fa-regular fa-map" aria-hidden="true"></i><span>Peta</span></button>
+  </nav>
+  <dialog id="camera-dialog" class="player-dialog" aria-labelledby="camera-title">
+    <div class="player-header"><span class="player-icon" aria-hidden="true"><i class="fa-solid fa-video"></i></span><div class="player-heading"><p class="player-eyebrow">TAYANGAN CCTV</p><h2 id="camera-title"></h2><p id="camera-group"></p></div><form method="dialog"><button type="submit" class="player-close" autofocus aria-label="Tutup tayangan"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form></div>
+    <div id="camera-player" class="camera-player"></div>
+    <div class="player-body"><p id="player-status" role="status"></p><p class="player-help">Jika video belum tampil, coba buka tayangan melalui <a id="player-portal" href="https://cctv.cirebonkota.go.id/" target="_blank" rel="noopener noreferrer">portal sumber</a>.</p><a id="camera-link" class="player-external" target="_blank" rel="noopener noreferrer">Buka tayangan <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></div>
   </dialog>
   <script type="application/json" id="camera-catalog">
 {
@@ -396,4 +411,3 @@
 <script type="application/json" id="city-catalog">[{"slug": "depan-ataqwa", "name": "Depan Masjid Raya At-Taqwa", "lat": -6.710498, "lon": 108.558485, "kecamatan": "Pekalipan", "online": true}, {"slug": "satpol-pp", "name": "Satpol PP", "lat": -6.73469, "lon": 108.560789, "kecamatan": "Kesambi", "online": true}, {"slug": "sudarsono", "name": "Jalan dr. Sudarsono", "lat": -6.728697, "lon": 108.552957, "kecamatan": "Kesambi", "online": true}, {"slug": "bypass", "name": "Jalan Brigjen Darsono (Bypass)", "lat": -6.742371, "lon": 108.567851, "kecamatan": "Harjamukti", "online": true}, {"slug": "lemah-wungkuk", "name": "Lemah Wungkuk", "lat": -6.724, "lon": 108.566, "kecamatan": "Pekalipan", "online": false}, {"slug": "simpang-pulasaren", "name": "Pulasaren Rel Kereta", "lat": -6.730082, "lon": 108.543725, "kecamatan": "Kesambi", "online": true}, {"slug": "simpang-samsat", "name": "Simpang Samsat", "lat": -6.73112, "lon": 108.54017, "kecamatan": "Kesambi", "online": true}, {"slug": "simpang-terminal", "name": "Simpang Terminal", "lat": -6.7406, "lon": 108.55311, "kecamatan": "Harjamukti", "online": true}, {"slug": "simpang-kanggraksan", "name": "Simpang Kanggraksan", "lat": -6.73961, "lon": 108.54811, "kecamatan": "Harjamukti", "online": true}, {"slug": "simpang-perumnas", "name": "Simpang Perumnas", "lat": -6.74198, "lon": 108.56331, "kecamatan": "Harjamukti", "online": true}, {"slug": "simpang-gunung-sari", "name": "Simpang Gunung Sari", "lat": -6.712184, "lon": 108.55101, "kecamatan": "Kesambi", "online": true}, {"slug": "simpang-diklatpri", "name": "Simpang Diklatpri", "lat": -6.728585, "lon": 108.550112, "kecamatan": "Kesambi", "online": true}, {"slug": "simpang-siliwangi", "name": "Simpang Siliwangi", "lat": -6.710145, "lon": 108.559877, "kecamatan": "Kejaksan", "online": true}, {"slug": "simpang-krucuk", "name": "Simpang Krucuk", "lat": -6.699513, "lon": 108.554558, "kecamatan": "Kejaksan", "online": true}, {"slug": "depan-kantor-pd", "name": "Depan Kantor PD", "lat": -6.715, "lon": 108.556, "kecamatan": "Kejaksan", "online": true}, {"slug": "simpang-winaon", "name": "Simpang Winaon", "lat": -6.719766, "lon": 108.565797, "kecamatan": "Pekalipan", "online": true}, {"slug": "simpang-asia", "name": "Simpang Asia", "lat": -6.71505, "lon": 108.562764, "kecamatan": "Pekalipan", "online": true}, {"slug": "simpang-jabang-bayi", "name": "Simpang Jabang Bayi", "lat": -6.736635, "lon": 108.550065, "kecamatan": "Kesambi", "online": true}, {"slug": "pintu-masuk-balaikota", "name": "Pintu Masuk Balai Kota", "lat": -6.707126, "lon": 108.558383, "kecamatan": "Kejaksan", "online": true}, {"slug": "pintu-masuk-balkot", "name": "Pintu Masuk BALKOT", "lat": -6.707126, "lon": 108.558383, "kecamatan": "Kejaksan", "online": true}, {"slug": "jl-pemuda", "name": "Jalan Pemuda", "lat": -6.729987, "lon": 108.544124, "kecamatan": "Kesambi", "online": false}, {"slug": "simpang-drajat", "name": "Simpang Drajat", "lat": -6.734127, "lon": 108.562121, "kecamatan": "Kesambi", "online": false}, {"slug": "simpang-kesambi", "name": "Kel. Kesambi", "lat": -6.728363, "lon": 108.558303, "kecamatan": "Kesambi", "online": true}]</script>
 </body>
 </html>
-
