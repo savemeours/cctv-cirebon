@@ -141,7 +141,15 @@ function openCityCamera(camera) {
     video.src = url;
     video.play().catch(failed);
   } else if (window.Hls?.isSupported()) {
-    hls = new window.Hls({ lowLatencyMode: true, backBufferLength: 6 });
+    hls = new window.Hls({
+      lowLatencyMode: true,
+      backBufferLength: 6,
+      liveSyncDurationCount: 1,
+      liveMaxLatencyDurationCount: 4,
+      manifestLoadingTimeOut: 25000,
+      maxBufferLength: 8,
+      maxMaxBufferLength: 16
+    });
     hls.on(window.Hls.Events.ERROR, (_event, data) => {
       if (data.fatal) {
         failed();
