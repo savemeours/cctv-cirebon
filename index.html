@@ -12,50 +12,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="./style.css?v=17">
+  <link rel="stylesheet" href="./style.css?v=18">
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"></script>
-  <script type="module" src="./app.js?v=17"></script>
+  <script type="module" src="./app.js?v=18"></script>
 </head>
 <body data-view="list">
   <a class="skip-link" href="#camera-search">Cari kamera</a>
   <header class="app-header">
     <a class="brand" href="./" aria-label="Pantau Cirebon, beranda">
-      <span class="brand-symbol" aria-hidden="true"><i class="fa-solid fa-video"></i></span>
       <span><h1>Pantau<span>Cirebon</span></h1><small>CCTV Kota & Kabupaten</small></span>
     </a>
+    <div class="navigation-label">Ruang pantau</div>
     <nav class="desktop-views view-switch" aria-label="Tampilan">
-      <button type="button" data-view-choice="map" aria-pressed="true"><i class="fa-regular fa-map" aria-hidden="true"></i> Peta</button>
-      <button type="button" data-view-choice="list" aria-pressed="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Kamera</button>
+      <button type="button" data-view-choice="list" aria-pressed="true"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Kamera</button>
+      <button type="button" data-view-choice="map" aria-pressed="false"><i class="fa-regular fa-map" aria-hidden="true"></i> Peta lokasi</button>
     </nav>
+    <nav class="library-tabs" aria-label="Koleksi kamera">
+      <button type="button" data-library="all" aria-pressed="true"><i class="fa-solid fa-video" aria-hidden="true"></i> Semua kamera</button>
+      <button type="button" data-library="favorites" aria-pressed="false"><i class="fa-regular fa-star" aria-hidden="true"></i> Favorit <span id="favorite-count">0</span></button>
+      <button type="button" data-library="recent" aria-pressed="false"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Riwayat</button>
+    </nav>
+    <p class="navigation-note">Jalan, persimpangan,<br>dan ruang publik Cirebon.</p>
     <div class="header-actions">
-      <button id="refresh" class="icon-button refresh-button" type="button" aria-label="Perbarui daftar dan periksa ulang kamera" title="Periksa ulang kamera" disabled><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
+      <button id="refresh" class="refresh-button" type="button" aria-label="Perbarui daftar dan periksa ulang kamera" title="Periksa ulang kamera" disabled><i class="fa-solid fa-rotate-right" aria-hidden="true"></i><span>Periksa ulang</span></button>
     </div>
   </header>
   <main class="app-workspace" id="main-content">
     <section class="directory" aria-labelledby="directory-title">
       <div class="directory-controls">
-        <div class="directory-intro"><div><p class="eyebrow">PANTAU CIREBON</p><h2 id="directory-title">Jelajahi kamera</h2></div><span class="area-emblem" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span></div>
+        <div class="directory-intro"><h2 id="directory-title">Kamera Cirebon</h2><p id="directory-description">Pilih lokasi, lihat kondisinya.</p></div>
+        <div class="region-control"><span class="field-label">Wilayah pemantauan</span>
         <div class="area-switch" role="group" aria-label="Wilayah CCTV">
-          <button id="area-city" type="button" aria-pressed="true">Kota Cirebon <span id="city-count">—</span></button>
-          <button id="area-regency" type="button" aria-pressed="false">Kabupaten <span id="regency-count">—</span></button>
+          <button id="area-city" type="button" aria-pressed="true">Kota Cirebon <span id="city-count">0</span></button>
+          <button id="area-regency" type="button" aria-pressed="false">Kabupaten <span id="regency-count">0</span></button>
         </div>
-        <label class="search-box" for="camera-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="sr-only">Cari nama atau lokasi kamera</span><input id="camera-search" type="search" placeholder="Cari lokasi atau nama kamera" autocomplete="off" disabled></label>
+        </div>
+        <label class="search-field" for="camera-search"><span class="field-label">Cari kamera</span><span class="search-box"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="camera-search" type="search" placeholder="Nama jalan atau lokasi" autocomplete="off" disabled></span></label>
         <div class="status-filters" role="group" aria-label="Filter hasil pemeriksaan">
           <button type="button" data-status-filter="all" aria-pressed="true">Semua <span id="count-all">0</span></button>
           <button type="button" data-status-filter="playable" aria-pressed="false"><span class="status-dot good" aria-hidden="true"></span>Bisa diputar <span id="count-playable">0</span></button>
           <button type="button" data-status-filter="unavailable" aria-pressed="false"><span class="status-dot bad" aria-hidden="true"></span>Belum bisa <span id="count-unavailable">0</span></button>
         </div>
       </div>
-      <div class="library-toolbar">
-        <div class="library-tabs" role="group" aria-label="Koleksi kamera">
-          <button type="button" data-library="all" aria-pressed="true"><i class="fa-solid fa-video" aria-hidden="true"></i> Semua kamera</button>
-          <button type="button" data-library="favorites" aria-pressed="false"><i class="fa-regular fa-star" aria-hidden="true"></i> Favorit <span id="favorite-count">0</span></button>
-          <button type="button" data-library="recent" aria-pressed="false"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Terakhir ditonton</button>
-        </div>
-        <label class="sort-control"><i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i><span class="sr-only">Urutan kamera</span><select id="camera-sort"><option value="name">Nama A–Z</option><option value="status">Bisa diputar dahulu</option><option value="recent">Terakhir ditonton</option></select></label>
+      <div class="result-toolbar"><div class="library-toolbar">
+        <p class="monitor-hint"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Pilih ikon grid untuk memantau hingga 4 kamera.</p>
+        <label class="sort-control"><span>Urutkan</span><select id="camera-sort" aria-label="Urutan kamera"><option value="name">Nama A–Z</option><option value="status">Bisa diputar dahulu</option><option value="recent">Terakhir ditonton</option></select></label>
       </div>
-      <div class="directory-result"><p id="camera-status" role="status">Memuat kamera…</p><span class="result-note"><span class="status-dot" aria-hidden="true"></span><span id="camera-check-status">Menyiapkan pemeriksaan</span></span></div>
+      <div class="directory-result"><p id="camera-status" role="status">Memuat kamera…</p><span class="result-note"><span class="status-dot" aria-hidden="true"></span><span id="camera-check-status">Menyiapkan pemeriksaan</span></span></div></div>
       <div class="camera-scroll">
         <ul id="camera-list" class="camera-list" aria-label="Kamera CCTV"></ul>
         <div id="camera-empty" class="empty-state" hidden><span aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span><h3 id="empty-title">Kamera tidak ditemukan</h3><p id="empty-description">Coba nama lokasi lain atau tampilkan semua kamera.</p><button id="clear-filters" type="button" class="secondary-button">Tampilkan semua</button></div>
@@ -68,7 +72,7 @@
     <section class="map-panel" id="map-panel" aria-labelledby="map-title">
       <div id="map" aria-label="Peta lokasi CCTV"><p id="map-placeholder">Memuat peta Cirebon…</p></div>
       <div class="map-caption"><span class="map-caption-icon" aria-hidden="true"><i class="fa-regular fa-map"></i></span><div><h2 id="map-title">Kota Cirebon</h2><p id="map-camera-count">Memuat titik kamera…</p></div></div>
-      <button id="reset-map" class="map-reset" type="button" disabled><i class="fa-solid fa-expand" aria-hidden="true"></i><span>Semua titik</span></button>
+      <button id="reset-map" class="map-reset" type="button" aria-label="Tampilkan semua titik kamera" disabled><i class="fa-solid fa-expand" aria-hidden="true"></i><span>Semua titik</span></button>
       <div class="map-legend" aria-label="Legenda status kamera"><span><b class="status-dot good" aria-hidden="true"></b>Bisa diputar</span><span><b class="status-dot bad" aria-hidden="true"></b>Belum bisa</span><span><b class="status-dot" aria-hidden="true"></b>Belum diperiksa</span></div>
     </section>
   </main>
@@ -81,7 +85,8 @@
   <dialog id="camera-dialog" class="player-dialog" aria-labelledby="camera-title">
     <div class="player-header"><span class="player-icon" aria-hidden="true"><i class="fa-solid fa-video"></i></span><div class="player-heading"><p class="player-eyebrow">TAYANGAN CCTV</p><h2 id="camera-title"></h2><p id="camera-group"></p></div><form method="dialog"><button type="submit" class="player-close" autofocus aria-label="Tutup tayangan"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form></div>
     <div class="player-tools"><button type="button" id="share-camera"><i class="fa-solid fa-link" aria-hidden="true"></i> Salin tautan</button><button type="button" id="fullscreen-player"><i class="fa-solid fa-expand" aria-hidden="true"></i> Layar penuh</button><button type="button" id="retry-player"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Coba lagi</button></div>
-    <input id="share-link-field" class="share-link-field" readonly aria-label="Tautan langsung kamera" hidden>
+    <label id="share-link-label" class="share-link-label" for="share-link-field" hidden>Tautan langsung kamera</label>
+    <input id="share-link-field" class="share-link-field" readonly hidden>
     <div id="camera-player" class="camera-player"></div>
     <div class="player-body"><p id="player-status" role="status"></p></div>
   </dialog>

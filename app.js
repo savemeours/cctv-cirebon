@@ -522,6 +522,7 @@ function openCamera(camera) {
   dialog.showModal();
   dialog.scrollTop = 0;
   document.querySelector('#share-link-field').hidden = true;
+  document.querySelector('#share-link-label').hidden = true;
   mountSingleCamera(camera);
 }
 
@@ -635,7 +636,19 @@ function renderCameras() {
       const marker = L.marker(camera.coordinates, {
         title: camera.name,
         icon: markerIcon(playbackChecks.get(cameraKey(camera))?.state)
-      }).on('click', () => openCamera(camera)).addTo(markers);
+      }).on('click', () => openCamera(camera));
+      marker.on('add', () => {
+        const element = marker.getElement();
+        element.setAttribute('aria-label', 'Tayangan ' + displayName(camera));
+        element.onkeydown = event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            openCamera(camera);
+          }
+        };
+      });
+      marker.addTo(markers);
       mapViews.set(cameraKey(camera), marker);
     }
     updateCheckView(camera);
@@ -797,6 +810,13 @@ function sortCameraRows() {
 }
 function updateLibraryButtons() {
   for (const button of document.querySelectorAll('[data-library]')) button.setAttribute('aria-pressed', String(button.dataset.library === libraryFilter));
+  const headings = {
+    all: ['Kamera Cirebon', 'Pilih lokasi, lihat kondisinya.'],
+    favorites: ['Kamera favorit', 'Lokasi pilihan Anda di wilayah ini.'],
+    recent: ['Riwayat tontonan', 'Kembali ke kamera yang terakhir Anda buka.']
+  };
+  document.querySelector('#directory-title').textContent = headings[libraryFilter][0];
+  document.querySelector('#directory-description').textContent = headings[libraryFilter][1];
 }
 function updateMonitorTray() {
   document.querySelector('#monitor-tray').hidden = monitorSelection.size === 0;
@@ -852,7 +872,10 @@ function startMonitor() {
   if (!dialog.open) dialog.showModal();
 }
 for (const button of document.querySelectorAll('[data-library]')) button.addEventListener('click', () => {
-  libraryFilter = button.dataset.library; updateLibraryButtons(); updateVisibleCameras();
+  libraryFilter = button.dataset.library;
+  setView('list');
+  updateLibraryButtons();
+  updateVisibleCameras();
 });
 document.querySelector('#camera-sort').addEventListener('change', event => { sortOrder = event.target.value; sortCameraRows(); });
 document.querySelector('#clear-monitor').addEventListener('click', () => {
@@ -877,7 +900,9 @@ document.querySelector('#share-camera').addEventListener('click', async () => {
   url.searchParams.set('camera', shareId(selectedCamera));
   try { await navigator.clipboard.writeText(url.href); announce('Tautan kamera disalin.'); }
   catch {
-    const field = document.querySelector('#share-link-field'); field.hidden = false; field.value = url.href; field.focus(); field.select();
+    const field = document.querySelector('#share-link-field');
+    document.querySelector('#share-link-label').hidden = false;
+    field.hidden = false; field.value = url.href; field.focus(); field.select();
     announce('Penyalinan otomatis belum diizinkan. Salin tautan pada kolom di pemutar.');
   }
 });

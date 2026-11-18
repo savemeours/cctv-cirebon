@@ -43,13 +43,13 @@ Hasil digunakan kembali hingga tiga menit. Tombol Muat ulang daftar mengulangi p
 
 ## Tata letak desktop dan mobile
 
-Desktop menampilkan daftar kamera di samping peta, dengan pilihan tampilan kisi kamera. Mobile memulai dari kartu thumbnail dua kolom dan memakai navigasi Kamera/Peta di bawah. Pemutar mobile menggunakan layar penuh. Filter Semua, Bisa diputar, dan Belum bisa memakai hasil pemeriksaan browser yang sama pada seluruh tampilan.
+Desktop menggunakan navigasi vertikal tetap untuk Kamera, Peta lokasi, Semua kamera, Favorit, dan Riwayat. Galeri memakai dua, tiga, atau empat kolom sesuai ruang layar. Tampilan peta menempatkan indeks kamera di samping peta. Mobile memakai koleksi di atas, galeri satu kolom, dan navigasi Kamera/Peta tetap di bawah. Pemutar mobile menggunakan layar penuh. Filter Semua, Bisa diputar, dan Belum bisa memakai hasil pemeriksaan browser yang sama pada seluruh tampilan.
 
 Nama kamera dirapikan untuk dibaca, sedangkan identitas kamera tetap tersedia pada keterangan wilayah dan judul tombol. Pilihan wilayah, pencarian, dan hasil pemeriksaan digunakan bersama ketika mengganti tampilan. Status yang belum diperiksa tetap dibedakan dari video yang gagal dimuat.
 
 
 ### Penyempurnaan tampilan
-Halaman awal desktop menggunakan galeri thumbnail tiga kolom, empat pada layar lebar. Daftar mobile memakai kartu horizontal yang ringkas dengan navigasi mengambang Kamera/Peta. Jarak, skala teks, kontrol wilayah, filter, dan pemutar diseragamkan. Tombol portal sumber dan pengalihan eksternal di pemutar dihapus. Pesan kegagalan mengarahkan pengguna kembali memilih kamera atau memeriksa ulang.
+Antarmuka menggunakan warna kertas hangat, teks arang, serta aksen bata untuk navigasi dan aksi. Thumbnail, informasi kamera, serta tombol favorit dan multi-kamera berada pada area terpisah. Kontrol memiliki label, fokus keyboard, dan target sentuh minimal 44 piksel. Penanda peta mempunyai nama kamera yang aksesibel dan dapat dibuka dengan Enter atau Spasi. Tombol portal sumber dan pengalihan eksternal di pemutar tetap dihapus. Arah visual dijelaskan pada DESIGN.md, sedangkan catatan verifikasi tersedia pada UI-REVIEW.md.
 
 
 ### Fitur pemantauan
