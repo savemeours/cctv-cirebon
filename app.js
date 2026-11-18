@@ -802,17 +802,7 @@ function updateMonitorTray() {
   document.querySelector('#monitor-count').textContent = monitorSelection.size;
 }
 function mountMultiCamera(camera, target, note) {
-  if (!camera.city) {
-    const frame = document.createElement('iframe');
-    const url = new URL(camera.url); url.searchParams.set('autoplay', 'true'); url.searchParams.set('mute', 'true');
-    frame.src = url.href; frame.title = 'Tayangan ' + displayName(camera);
-    frame.allow = 'autoplay; fullscreen; picture-in-picture'; frame.allowFullscreen = true;
-    frame.sandbox = 'allow-scripts allow-same-origin allow-presentation';
-    note.textContent = 'Pemutar publik · suara dimatikan'; target.append(frame);
-    multiCleanups.push(() => frame.remove());
-    return;
-  }
-  if (!camera.online) { note.textContent = 'Kamera tercatat tidak aktif.'; return; }
+  if (camera.city && !camera.online) { note.textContent = 'Kamera tercatat tidak aktif.'; return; }
   const video = document.createElement('video');
   video.controls = true; video.autoplay = true; video.muted = true; video.playsInline = true; target.append(video);
   let engine; let timer; let pulse; let disposed = false;
@@ -825,10 +815,12 @@ function mountMultiCamera(camera, target, note) {
   const fail = () => { note.textContent = 'Tayangan belum dapat diputar. Tekan Coba lagi.'; cleanup(); };
   note.textContent = 'Menghubungkan tayangan…';
   const heartbeat = () => fetch(cityRelay + 'api/stream/heartbeat/' + camera.slug, { credentials: 'omit', signal: AbortSignal.timeout(8000) }).catch(() => {});
-  heartbeat(); pulse = setInterval(heartbeat, 15000); timer = setTimeout(fail, 30000);
+  if (camera.city) { heartbeat(); pulse = setInterval(heartbeat, 15000); }
+  timer = setTimeout(fail, 30000);
   video.addEventListener('playing', () => { clearTimeout(timer); note.textContent = 'Tayangan berjalan · suara dimatikan'; });
   video.addEventListener('error', fail);
-  const url = cityRelay + 'hls/' + camera.slug + '/index.m3u8';
+  const url = mediaUrl(camera);
+  if (!url) { fail(); return; }
   if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = url; video.play().catch(fail); }
   else if (window.Hls?.isSupported()) {
     engine = new window.Hls({ maxBufferLength: 8, maxMaxBufferLength: 16, backBufferLength: 4, liveSyncDurationCount: 2 });
