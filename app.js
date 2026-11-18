@@ -690,12 +690,10 @@ async function loadCameras() {
     const catalogId = area === 'city' ? '#city-catalog' : '#camera-catalog';
     const snapshot = JSON.parse(document.querySelector(catalogId).textContent);
     catalogs.set(area, area === 'city' ? parseCityCameras(snapshot) : parseCameras(snapshot));
-    sourceLabels.set(area, area === 'city'
-      ? 'Salinan daftar Kota Cirebon · 18 November 2026'
-      : 'Salinan data Socakaton · 18 November 2026');
+    sourceLabels.set(area, 'Daftar kamera ' + areaConfig[area].label + '.');
     showArea();
   }
-  cameraSource.textContent = sourceLabels.get(area) + '. Memeriksa pembaruan…';
+  cameraSource.textContent = 'Memeriksa pembaruan daftar kamera…';
   try {
     const endpoint = area === 'city' ? cityRelay + 'api/status' : source + 'api/get_public_cctv';
     const response = await fetch(endpoint, {
@@ -705,9 +703,9 @@ async function loadCameras() {
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const result = await response.json();
     catalogs.set(area, area === 'city' ? parseCityCameras(result) : parseCameras(result));
-    sourceLabels.set(area, 'Daftar terbaru dari ' + areaConfig[area].label);
+    sourceLabels.set(area, 'Daftar kamera ' + areaConfig[area].label + ' telah diperbarui.');
   } catch {
-    sourceLabels.set(area, sourceLabels.get(area).replace(/\. Pembaruan belum tersedia\.$/, '') + '. Pembaruan belum tersedia.');
+    sourceLabels.set(area, 'Daftar kamera ' + areaConfig[area].label + ' tetap tersedia. Pilih Periksa ulang untuk memeriksa pembaruan.');
   } finally {
     if (area === activeArea) {
       showArea();
