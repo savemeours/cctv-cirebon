@@ -28,6 +28,7 @@ function saveLocal(key, value) {
 let noticeTimer;
 function announce(message) {
   const notice = document.querySelector('#app-notice');
+  if (dialog.open) dialog.append(notice); else document.body.append(notice);
   notice.textContent = message; notice.hidden = false; clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => { notice.hidden = true; }, 4500);
 }
