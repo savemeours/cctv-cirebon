@@ -120,6 +120,7 @@ function probeCamera(camera) {
     document.body.append(video);
     let probeHls;
     let timer;
+    let thumbnailTimer;
     let finished = false;
     const controller = new AbortController();
 
@@ -127,6 +128,7 @@ function probeCamera(camera) {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
+      clearTimeout(thumbnailTimer);
       controller.abort();
       probeHls?.destroy();
       video.pause();
@@ -146,7 +148,7 @@ function probeCamera(camera) {
     checkCancellations.add(cancel);
     timer = setTimeout(() => finish('unavailable', 'Video belum berhasil dimuat dalam 25 detik.'), 25000);
 
-    video.addEventListener('loadeddata', () => {
+    const captureFrame = () => {
       if (!video.videoWidth || finished) return;
       let thumbnail = '';
       try {
@@ -159,7 +161,14 @@ function probeCamera(camera) {
         // Playback can succeed even when the source prevents a frame capture.
       }
       finish('playable', thumbnail ? '' : 'Video siap. Thumbnail belum tersedia.', thumbnail);
-    });
+    };
+    video.addEventListener('playing', () => {
+      if (video.requestVideoFrameCallback) {
+        video.requestVideoFrameCallback(() => video.requestVideoFrameCallback(captureFrame));
+      } else {
+        thumbnailTimer = setTimeout(captureFrame, 300);
+      }
+    }, { once: true });
     video.addEventListener('error', () => finish('unavailable', 'Koneksi atau format video belum dapat diputar di browser ini.'));
 
     const stream = mediaUrl(camera);
@@ -423,7 +432,6 @@ function renderCameras() {
     name.textContent = camera.name;
     const group = document.createElement('small');
     group.textContent = camera.group || 'Kamera publik';
-    if (camera.city) group.textContent += camera.online ? ' · Aktif menurut sumber' : ' · Tidak aktif menurut sumber';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'camera-row';
