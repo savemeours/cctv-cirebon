@@ -1,6 +1,7 @@
 const source = 'https://socakaton.cirebonkab.go.id/';
 const viewerHosts = new Set(['socakaton.cirebonkab.go.id', 'cctv-backend.cirebonkab.go.id']);
 const citySource = 'https://cctv.cirebonkota.go.id/';
+const cityRelay = 'https://pantau-cirebon-stream.fnnanang.chatgpt.site/city/';
 const areaConfig = {
   city: { label: 'Kota Cirebon', portal: citySource, center: [-6.727, 108.552], zoom: 13 },
   regency: { label: 'Kabupaten Cirebon', portal: source, center: [-6.717, 108.5], zoom: 11 }
@@ -124,18 +125,18 @@ function openCityCamera(camera) {
     hls = undefined;
     message.textContent = 'Tayangan belum dapat diputar di halaman ini. Buka portal Kota Cirebon dan pilih ' + camera.name + '.';
   };
-  connectionTimer = setTimeout(failed, 12000);
+  connectionTimer = setTimeout(failed, 30000);
   video.addEventListener('playing', () => {
     clearTimeout(connectionTimer);
     message.textContent = 'Tayangan Kota Cirebon';
   });
   video.addEventListener('error', failed);
-  const heartbeat = () => fetch(citySource + 'api/stream/heartbeat/' + camera.slug, {
+  const heartbeat = () => fetch(cityRelay + 'api/stream/heartbeat/' + camera.slug, {
     credentials: 'omit', signal: AbortSignal.timeout(8000)
   }).catch(() => {});
   heartbeat();
   heartbeatTimer = setInterval(heartbeat, 15000);
-  const url = citySource + 'hls/' + camera.slug + '/index.m3u8';
+  const url = cityRelay + 'hls/' + camera.slug + '/index.m3u8';
   if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = url;
     video.play().catch(failed);
@@ -167,6 +168,7 @@ function openCamera(camera) {
   document.querySelector('#player-portal').href = areaConfig[activeArea].portal;
   document.querySelector('#player-status').textContent = '';
   dialog.showModal();
+  dialog.scrollTop = 0;
   if (camera.city) {
     openCityCamera(camera);
     return;
@@ -249,7 +251,7 @@ async function loadCameras() {
   }
   cameraSource.textContent = sourceLabels.get(area) + '. Memeriksa pembaruan…';
   try {
-    const endpoint = area === 'city' ? citySource + 'api/status' : source + 'api/get_public_cctv';
+    const endpoint = area === 'city' ? cityRelay + 'api/status' : source + 'api/get_public_cctv';
     const response = await fetch(endpoint, {
       credentials: 'omit',
       signal: AbortSignal.timeout(8000)

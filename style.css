@@ -70,3 +70,29 @@ iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
 #camera-player video { display: block; width: 100%; aspect-ratio: 16/9; background: #142823; }
 #player-status { font-size: .88rem; line-height: 1.5; color: var(--muted); }
 #player-status:empty { display: none; }
+
+dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(1040px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+dialog[open] { display: flex; flex-direction: column; gap: 12px; }
+.dialog-head { flex-shrink: 0; margin: 0; align-items: center; }
+.dialog-head h2 { font-size: 1.1rem; }
+#camera-player { flex-shrink: 0; }
+#camera-player video, #camera-player iframe {
+  width: 100%;
+  height: min(55dvh, 560px);
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+#player-status, dialog .player-help { margin: 0; flex-shrink: 0; }
+#camera-link { align-self: flex-start; flex-shrink: 0; }
+@media (max-height: 540px) {
+  #camera-player video, #camera-player iframe { height: 42dvh; }
+  dialog[open] { gap: 8px; padding: 12px; }
+}

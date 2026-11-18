@@ -11,10 +11,18 @@ Salinan daftar disertakan pada blok JSON di index.html agar pencarian tetap ters
 
 Pemutar Kabupaten mengikuti URL publik sumber. Pemutar Kota menggunakan HLS dan heartbeat hanya selama kamera dibuka. Penutupan dialog menghentikan video dan heartbeat.
 
-API dan video Kota mengikuti aturan CORS server resmi. Portal Kota mengirim X-Frame-Options SAMEORIGIN sehingga tautan ke portal dibuka di tab baru. Jika server menolak pemutaran dari GitHub Pages, dialog menyediakan tautan portal resmi serta nama kamera yang harus dipilih.
+API dan video Kota diteruskan melalui penghubung khusus agar dapat dimuat dari GitHub Pages. Pemutar menyediakan tautan portal resmi jika sumber atau penghubung tidak tersedia.
 
 ## Publikasi
 
 GitHub Pages menggunakan cabang main dan folder root. Situs publik tersedia di https://savemeours.github.io/cctv-cirebon/.
 
 Untuk mengganti salinan, sesuaikan blok camera-catalog atau city-catalog dalam index.html dan tanggal sumber pada app.js. Ekspor city-cameras.json berisi salinan data Kota yang sama.
+
+## Penghubung siaran Kota
+
+Pemutar dan daftar Kota menggunakan https://pantau-cirebon-stream.fnnanang.chatgpt.site/city/ sebagai penghubung server untuk aliran publik. Penghubung hanya menerima endpoint status, heartbeat, dan berkas HLS kamera Kota yang tercantum di daftar. Playlist diterjemahkan ke jalur penghubung agar segmen video dapat dibaca peramban dari GitHub Pages. Sumber asli tetap portal Kota.
+
+Penghubung berjalan sebagai layanan terpisah. Jika layanan atau kamera sumber tidak tersedia, pemutar menampilkan pesan kegagalan dan tautan portal resmi.
+
+Kode sumber penghubung tersedia di city-relay-worker.js dan dijalankan sebagai Worker ES module pada layanan terpisah. Penghubung aktif hanya meneruskan endpoint publik Kota Cirebon yang telah ditentukan.
