@@ -34,3 +34,9 @@ Penghubung mengambil segmen terbaru lebih awal dan menahannya sementara hingga 6
 ## Pemeriksaan Kabupaten 18 November 2026
 
 Salinan JSON terbaru berisi 41 kamera publik. Pemutar Kabupaten mengirim parameter autoplay=true dan mute=true, serta izin autoplay pada iframe. Pembungkus Socakaton yang menyertakan URL pemutar publik diuraikan ke URL tersebut setelah validasi host dan format. Tombol atur ulang peta serta pemilihan wilayah menyesuaikan batas tampilan dengan seluruh titik wilayah.
+
+## Indikator dan thumbnail
+
+Halaman menguji aliran video pada browser pengunjung dengan maksimum dua pemeriksaan bersamaan. Status Bisa diputar diberikan setelah bingkai video berhasil didekode. Thumbnail diambil dari bingkai tersebut dan hanya disimpan dalam memori halaman. Status Belum bisa diputar berarti pemeriksaan pada browser ini gagal, melewati 25 detik, atau sumber menandai kamera tidak aktif. Status ini mengikuti dukungan codec dan jaringan browser.
+
+Hasil digunakan kembali hingga tiga menit. Tombol Muat ulang daftar mengulangi pemeriksaan. Membuka pemutar menghentikan pemeriksaan latar belakang, yang dilanjutkan setelah dialog ditutup. Warna titik peta mengikuti hasil pemeriksaan.

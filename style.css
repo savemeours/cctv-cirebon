@@ -96,3 +96,42 @@ dialog[open] { display: flex; flex-direction: column; gap: 12px; }
   #camera-player video, #camera-player iframe { height: 42dvh; }
   dialog[open] { gap: 8px; padding: 12px; }
 }
+
+.camera-row { display: flex; gap: 10px; align-items: flex-start; }
+.camera-row .camera-information { display: block; flex: 1; min-width: 0; }
+.camera-thumbnail {
+  width: 108px;
+  height: 65px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #e3eee6;
+}
+.camera-row .camera-availability {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+.availability-playable { background: #daf4e6; color: #145336; }
+.availability-unavailable { background: #fbe3df; color: #873021; }
+.availability-checking, .availability-pending { background: #edf0ed; color: #455950; }
+.camera-row .camera-check-detail { font-size: .72rem; line-height: 1.45; font-weight: 400; }
+#camera-check-status { font-size: .8rem; line-height: 1.5; color: var(--muted); margin: 8px 0 0; }
+.camera-pin-playable { background: #187348; }
+.camera-pin-unavailable { background: #a34232; }
+.camera-pin-pending, .camera-pin-checking { background: #6b7772; }
+.camera-probe {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  left: 0;
+  bottom: 0;
+  opacity: .001;
+  pointer-events: none;
+}
+@media (min-width: 721px) and (max-width: 1100px) {
+  .camera-thumbnail { width: 80px; height: 50px; }
+}

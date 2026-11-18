@@ -30,6 +30,199 @@ let map;
 let markers;
 let cameras = [];
 let currentSource = '';
+const playbackChecks = new Map();
+const rowViews = new Map();
+const mapViews = new Map();
+let checkGeneration = 0;
+const checkCancellations = new Set();
+const checkSummary = document.querySelector('#camera-check-status');
+
+function cameraKey(camera) {
+  return camera.city ? 'city:' + camera.slug : 'regency:' + camera.url;
+}
+
+function mediaUrl(camera) {
+  if (camera.city) return cityRelay + 'hls/' + camera.slug + '/index.m3u8';
+  const viewer = new URL(camera.url);
+  const id = viewer.pathname.match(/^\/([a-f0-9-]+)\.html$/)?.[1];
+  return id ? viewer.origin + '/memfs/' + id + '.m3u8' : null;
+}
+
+function checkLabel(result) {
+  return {
+    playable: 'Bisa diputar',
+    unavailable: 'Belum bisa diputar',
+    checking: 'Memeriksa…'
+  }[result?.state] || 'Belum diperiksa';
+}
+
+function markerIcon(state) {
+  return L.divIcon({
+    className: 'camera-pin camera-pin-' + (state || 'pending'),
+    html: '●',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+}
+
+function updateCheckView(camera) {
+  const key = cameraKey(camera);
+  const result = playbackChecks.get(key);
+  const view = rowViews.get(key);
+  if (view) {
+    view.badge.textContent = checkLabel(result);
+    view.badge.title = result?.checkedAt && result.state !== 'checking'
+      ? 'Diperiksa ' + new Date(result.checkedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      : '';
+    view.badge.className = 'camera-availability availability-' + (result?.state || 'pending');
+    view.detail.textContent = result?.reason || '';
+    view.detail.hidden = !result?.reason;
+    view.image.hidden = !result?.thumbnail;
+    if (result?.thumbnail) view.image.src = result.thumbnail;
+    else view.image.removeAttribute('src');
+  }
+  mapViews.get(key)?.setIcon(markerIcon(result?.state));
+}
+
+function updateCheckSummary() {
+  let playable = 0;
+  let unavailable = 0;
+  for (const camera of cameras) {
+    const state = playbackChecks.get(cameraKey(camera))?.state;
+    if (state === 'playable') playable++;
+    if (state === 'unavailable') unavailable++;
+  }
+  const pending = cameras.length - playable - unavailable;
+  checkSummary.textContent = cameras.length
+    ? playable + ' bisa diputar · ' + unavailable + ' belum bisa · ' + pending + ' belum selesai diperiksa'
+    : '';
+}
+
+function pauseChecks() {
+  checkGeneration++;
+  for (const cancel of [...checkCancellations]) cancel();
+}
+
+function probeCamera(camera) {
+  return new Promise(resolve => {
+    const key = cameraKey(camera);
+    const result = { state: 'checking', checkedAt: Date.now() };
+    playbackChecks.set(key, result);
+    updateCheckView(camera);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    video.crossOrigin = 'anonymous';
+    video.className = 'camera-probe';
+    video.setAttribute('aria-hidden', 'true');
+    video.tabIndex = -1;
+    document.body.append(video);
+    let probeHls;
+    let timer;
+    let finished = false;
+    const controller = new AbortController();
+
+    const finish = (state, reason = '', thumbnail = '') => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      controller.abort();
+      probeHls?.destroy();
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      video.remove();
+      checkCancellations.delete(cancel);
+      if (playbackChecks.get(key) === result) {
+        if (state) playbackChecks.set(key, { state, reason, thumbnail, checkedAt: Date.now() });
+        else playbackChecks.delete(key);
+        updateCheckView(camera);
+        updateCheckSummary();
+      }
+      resolve();
+    };
+    const cancel = () => finish(null);
+    checkCancellations.add(cancel);
+    timer = setTimeout(() => finish('unavailable', 'Video belum berhasil dimuat dalam 25 detik.'), 25000);
+
+    video.addEventListener('loadeddata', () => {
+      if (!video.videoWidth || finished) return;
+      let thumbnail = '';
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = Math.round(320 * video.videoHeight / video.videoWidth);
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        thumbnail = canvas.toDataURL('image/jpeg', 0.65);
+      } catch {
+        // Playback can succeed even when the source prevents a frame capture.
+      }
+      finish('playable', thumbnail ? '' : 'Video siap. Thumbnail belum tersedia.', thumbnail);
+    });
+    video.addEventListener('error', () => finish('unavailable', 'Koneksi atau format video belum dapat diputar di browser ini.'));
+
+    const stream = mediaUrl(camera);
+    if (!stream) {
+      finish('unavailable', 'Alamat aliran video belum tersedia.');
+      return;
+    }
+    if (camera.city && !camera.online) {
+      finish('unavailable', 'Sumber Kota menandai kamera ini tidak aktif.');
+      return;
+    }
+    if (camera.city) {
+      fetch(cityRelay + 'api/stream/heartbeat/' + camera.slug, {
+        credentials: 'omit', signal: controller.signal
+      }).catch(() => {});
+    }
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = stream;
+      video.play().catch(() => finish('unavailable', 'Browser belum dapat memulai video otomatis.'));
+    } else if (window.Hls?.isSupported()) {
+      probeHls = new window.Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        liveSyncDurationCount: 1,
+        liveMaxLatencyDurationCount: 4,
+        maxBufferLength: 2,
+        maxMaxBufferLength: 4,
+        backBufferLength: 0,
+        manifestLoadingTimeOut: 12000,
+        manifestLoadingMaxRetry: 0,
+        levelLoadingMaxRetry: 0,
+        fragLoadingMaxRetry: 1
+      });
+      probeHls.on(window.Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) finish('unavailable', 'Sumber video atau codec belum dapat dimuat di browser ini.');
+      });
+      probeHls.loadSource(stream);
+      probeHls.attachMedia(video);
+    } else {
+      finish('unavailable', 'Browser ini belum mendukung pemutar video HLS.');
+    }
+  });
+}
+
+function beginChecks() {
+  pauseChecks();
+  const generation = checkGeneration;
+  const entries = [...cameras];
+  let next = 0;
+  const worker = async () => {
+    while (generation === checkGeneration && !dialog.open && next < entries.length) {
+      const camera = entries[next++];
+      const previous = playbackChecks.get(cameraKey(camera));
+      if (previous && previous.state !== 'checking' && Date.now() - previous.checkedAt < 180000) continue;
+      await probeCamera(camera);
+    }
+    updateCheckSummary();
+  };
+  worker();
+  worker();
+  updateCheckSummary();
+}
+
 
 if (window.L) {
   mapPlaceholder.remove();
@@ -182,6 +375,7 @@ function openCityCamera(camera) {
 
 function openCamera(camera) {
   if (dialog.open) return;
+  pauseChecks();
   if (map && camera.coordinates) map.setView(camera.coordinates, Math.max(map.getZoom(), 14));
   document.querySelector('#camera-title').textContent = camera.name;
   document.querySelector('#camera-group').textContent = camera.group;
@@ -207,13 +401,18 @@ function openCamera(camera) {
   player.replaceChildren(frame);
 }
 
-dialog.addEventListener('close', stopPlayer);
+dialog.addEventListener('close', () => {
+  stopPlayer();
+  beginChecks();
+});
 
 function renderCameras() {
   const query = search.value.trim().toLocaleLowerCase('id');
   const matches = cameras.filter(camera =>
     (camera.name + ' ' + camera.group).toLocaleLowerCase('id').includes(query));
   list.replaceChildren();
+  rowViews.clear();
+  mapViews.clear();
   markers?.clearLayers();
   status.textContent = matches.length
     ? matches.length + ' dari ' + cameras.length + ' kamera publik'
@@ -228,19 +427,33 @@ function renderCameras() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'camera-row';
-    button.append(name, group);
+    const image = document.createElement('img');
+    image.className = 'camera-thumbnail';
+    image.alt = 'Pratinjau ' + camera.name;
+    image.hidden = true;
+    const information = document.createElement('span');
+    information.className = 'camera-information';
+    const badge = document.createElement('span');
+    const detail = document.createElement('small');
+    detail.className = 'camera-check-detail';
+    information.append(name, group, badge, detail);
+    button.append(image, information);
+    rowViews.set(cameraKey(camera), { image, badge, detail });
     button.addEventListener('click', () => openCamera(camera));
     const item = document.createElement('li');
     item.append(button);
     list.append(item);
 
     if (markers && camera.coordinates) {
-      L.marker(camera.coordinates, {
+      const marker = L.marker(camera.coordinates, {
         title: camera.name,
-        icon: L.divIcon({ className: 'camera-pin', html: '●', iconSize: [30, 30], iconAnchor: [15, 15] })
+        icon: markerIcon(playbackChecks.get(cameraKey(camera))?.state)
       }).on('click', () => openCamera(camera)).addTo(markers);
+      mapViews.set(cameraKey(camera), marker);
     }
+    updateCheckView(camera);
   }
+  updateCheckSummary();
 }
 
 function parseCameras(result) {
@@ -261,6 +474,7 @@ function showArea() {
   search.disabled = cameras.length === 0;
   cameraSource.textContent = currentSource;
   renderCameras();
+  beginChecks();
 }
 
 async function loadCameras() {
@@ -328,6 +542,11 @@ function selectArea(area) {
 document.querySelector('#area-city').addEventListener('click', () => selectArea('city'));
 document.querySelector('#area-regency').addEventListener('click', () => selectArea('regency'));
 search.addEventListener('input', renderCameras);
-refresh.addEventListener('click', loadCameras);
+refresh.addEventListener('click', () => {
+  for (const camera of cameras) playbackChecks.delete(cameraKey(camera));
+  renderCameras();
+  beginChecks();
+  loadCameras();
+});
 loadCameras();
 
